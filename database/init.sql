@@ -1,0 +1,1 @@
+SELECT 'Base de datos inicializada';
