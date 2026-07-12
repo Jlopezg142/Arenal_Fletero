@@ -19,6 +19,10 @@ class UsuarioResponse(BaseModel):
     usuario: str
     rol: str
 
+    model_config = {
+        "from_attributes": True
+    }
+
 
 class TokenResponse(BaseModel):
     access_token: str

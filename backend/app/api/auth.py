@@ -1,10 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    status,
+)
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
+from app.api.dependencies import obtener_usuario_actual
 from app.database import get_db
+from app.models.usuario import Usuario
 from app.schemas.auth_schema import (
-    LoginRequest,
     TokenResponse,
+    UsuarioResponse,
 )
 from app.services.auth_service import (
     ErrorAutenticacion,
@@ -24,14 +32,22 @@ router = APIRouter(
     status_code=status.HTTP_200_OK
 )
 def login(
-    datos: LoginRequest,
+    formulario: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
+    """
+    Inicia sesión mediante el formulario OAuth2 estándar.
+
+    Swagger enviará:
+    - username
+    - password
+    """
+
     try:
         return autenticar_usuario(
             db=db,
-            nombre_usuario=datos.usuario,
-            password=datos.password
+            nombre_usuario=formulario.username,
+            password=formulario.password
         )
 
     except ErrorAutenticacion as error:
@@ -42,3 +58,16 @@ def login(
                 "WWW-Authenticate": "Bearer"
             }
         ) from error
+
+
+@router.get(
+    "/me",
+    response_model=UsuarioResponse,
+    status_code=status.HTTP_200_OK
+)
+def consultar_usuario_actual(
+    usuario_actual: Usuario = Depends(
+        obtener_usuario_actual
+    )
+):
+    return usuario_actual
