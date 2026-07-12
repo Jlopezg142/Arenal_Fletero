@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -17,9 +18,20 @@ from app.services.usuario_service import (
 )
 
 
+APP_DIR = Path(__file__).resolve().parent
+UPLOADS_DIR = APP_DIR / "uploads"
+
+UPLOADS_DIR.mkdir(
+    parents=True,
+    exist_ok=True,
+)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(
+        bind=engine
+    )
 
     crear_administrador_inicial()
 
@@ -28,8 +40,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Arenal Fletero",
-    version="0.8.0",
-    lifespan=lifespan
+    version="1.0.0",
+    lifespan=lifespan,
 )
 
 
@@ -42,13 +54,19 @@ app.include_router(entregas_router)
 
 app.mount(
     "/uploads",
-    StaticFiles(directory="uploads"),
-    name="uploads"
+    StaticFiles(
+        directory=str(UPLOADS_DIR)
+    ),
+    name="uploads",
 )
 
 
 @app.get("/")
 def root():
     return {
-        "mensaje": "Arenal Fletero funcionando correctamente"
+        "mensaje": (
+            "Arenal Fletero funcionando "
+            "correctamente"
+        ),
+        "version": "1.0.0",
     }
