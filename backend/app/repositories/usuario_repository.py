@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.usuario import Usuario
@@ -9,11 +9,15 @@ def buscar_por_usuario(
     nombre_usuario: str
 ) -> Usuario | None:
     """
-    Busca un usuario por su nombre de acceso.
-    Devuelve None cuando no existe.
+    Busca un usuario ignorando mayúsculas y minúsculas.
     """
-    consulta = select(Usuario).where(
-        Usuario.usuario == nombre_usuario
+
+    consulta = (
+        select(Usuario)
+        .where(
+            func.lower(Usuario.usuario)
+            == nombre_usuario.lower()
+        )
     )
 
     return db.scalar(consulta)
@@ -23,9 +27,7 @@ def crear_usuario(
     db: Session,
     usuario: Usuario
 ) -> Usuario:
-    """
-    Guarda un nuevo usuario en PostgreSQL.
-    """
+
     db.add(usuario)
     db.commit()
     db.refresh(usuario)

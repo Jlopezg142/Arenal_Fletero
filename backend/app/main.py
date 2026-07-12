@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
+from app.api.auth import router as auth_router
 from app.database import Base, engine
 from app.models.agencia import Agencia
 from app.models.entrega import Entrega
@@ -18,10 +19,8 @@ async def lifespan(app: FastAPI):
     Ejecuta las tareas necesarias al iniciar la aplicación.
     """
 
-    # Crear tablas que todavía no existan
     Base.metadata.create_all(bind=engine)
 
-    # Crear el administrador inicial si no existe
     crear_administrador_inicial()
 
     yield
@@ -29,12 +28,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Arenal Fletero",
-    version="0.3.0",
+    version="0.4.0",
     lifespan=lifespan
 )
 
 
-# Fotografías locales durante el desarrollo
+app.include_router(auth_router)
+
+
 app.mount(
     "/uploads",
     StaticFiles(directory="uploads"),
