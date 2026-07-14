@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 
 from fastapi import UploadFile
 from sqlalchemy.exc import IntegrityError
@@ -59,12 +60,33 @@ def limpiar_comentario(
     return comentario_limpio
 
 
+def validar_coordenadas(
+    latitud: Decimal,
+    longitud: Decimal,
+) -> None:
+    if latitud < Decimal("-90") or latitud > Decimal("90"):
+        raise ErrorEntrega(
+            "La latitud debe estar entre -90 y 90."
+        )
+
+    if (
+        longitud < Decimal("-180")
+        or longitud > Decimal("180")
+    ):
+        raise ErrorEntrega(
+            "La longitud debe estar entre "
+            "-180 y 180."
+        )
+
+
 async def registrar_entrega(
     db: Session,
     usuario_actual: Usuario,
     agencia_id: int,
     envio: int,
     comentario: str | None,
+    latitud: Decimal,
+    longitud: Decimal,
     foto_envio: UploadFile,
 ) -> Entrega:
     agencia = buscar_agencia_por_id(
@@ -97,6 +119,11 @@ async def registrar_entrega(
         comentario
     )
 
+    validar_coordenadas(
+        latitud=latitud,
+        longitud=longitud,
+    )
+
     ruta_foto_envio: str | None = None
 
     try:
@@ -118,8 +145,8 @@ async def registrar_entrega(
         comentario=comentario_limpio,
         foto_envio=ruta_foto_envio,
         foto_lugar=None,
-        latitud=None,
-        longitud=None,
+        latitud=latitud,
+        longitud=longitud,
     )
 
     try:

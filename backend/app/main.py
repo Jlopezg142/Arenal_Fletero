@@ -19,7 +19,10 @@ from app.services.usuario_service import (
 
 
 APP_DIR = Path(__file__).resolve().parent
+ROOT_DIR = APP_DIR.parent
+
 UPLOADS_DIR = APP_DIR / "uploads"
+FRONTEND_DIR = ROOT_DIR / "frontend"
 
 UPLOADS_DIR.mkdir(
     parents=True,
@@ -40,7 +43,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Arenal Fletero",
-    version="1.0.0",
+    version="1.1.0",
     lifespan=lifespan,
 )
 
@@ -68,5 +71,17 @@ def root():
             "Arenal Fletero funcionando "
             "correctamente"
         ),
-        "version": "1.0.0",
+        "version": "1.1.0",
+        "aplicacion": "/app/",
+        "documentacion": "/docs",
     }
+
+
+app.mount(
+    "/app",
+    StaticFiles(
+        directory=str(FRONTEND_DIR),
+        html=True,
+    ),
+    name="frontend",
+)

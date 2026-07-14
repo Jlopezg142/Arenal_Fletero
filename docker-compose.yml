@@ -18,7 +18,8 @@ services:
 
   backend:
     build:
-      context: ./backend
+      context: .
+      dockerfile: backend/Dockerfile
 
     container_name: arenal_backend
 
@@ -30,6 +31,10 @@ services:
 
     depends_on:
       - postgres
+
+    volumes:
+      - ./backend/app/uploads:/app/app/uploads
+
 
 volumes:
   postgres_data:

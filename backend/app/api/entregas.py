@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 
 from fastapi import (
     APIRouter,
@@ -200,6 +201,24 @@ async def crear_entrega(
         default=None,
         max_length=1000,
     ),
+    latitud: Decimal = Form(
+        ...,
+        ge=Decimal("-90"),
+        le=Decimal("90"),
+        description=(
+            "Latitud actual del dispositivo. "
+            "Debe estar entre -90 y 90."
+        ),
+    ),
+    longitud: Decimal = Form(
+        ...,
+        ge=Decimal("-180"),
+        le=Decimal("180"),
+        description=(
+            "Longitud actual del dispositivo. "
+            "Debe estar entre -180 y 180."
+        ),
+    ),
     foto_envio: UploadFile = File(
         ...,
         description=(
@@ -219,6 +238,8 @@ async def crear_entrega(
             agencia_id=agencia_id,
             envio=envio,
             comentario=comentario,
+            latitud=latitud,
+            longitud=longitud,
             foto_envio=foto_envio,
         )
 
