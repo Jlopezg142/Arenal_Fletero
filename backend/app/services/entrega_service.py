@@ -64,7 +64,10 @@ def validar_coordenadas(
     latitud: Decimal,
     longitud: Decimal,
 ) -> None:
-    if latitud < Decimal("-90") or latitud > Decimal("90"):
+    if (
+        latitud < Decimal("-90")
+        or latitud > Decimal("90")
+    ):
         raise ErrorEntrega(
             "La latitud debe estar entre -90 y 90."
         )
@@ -79,6 +82,59 @@ def validar_coordenadas(
         )
 
 
+async def guardar_fotografias_entrega(
+    foto_envio: UploadFile,
+    foto_lugar: UploadFile,
+) -> tuple[str, str]:
+    ruta_foto_envio: str | None = None
+    ruta_foto_lugar: str | None = None
+
+    try:
+        ruta_foto_envio = (
+            await guardar_foto_entrega(
+                foto=foto_envio,
+            )
+        )
+
+        ruta_foto_lugar = (
+            await guardar_foto_entrega(
+                foto=foto_lugar,
+            )
+        )
+
+        return (
+            ruta_foto_envio,
+            ruta_foto_lugar,
+        )
+
+    except ErrorArchivoEntrega as error:
+        eliminar_foto_entrega(
+            ruta_foto_envio
+        )
+
+        eliminar_foto_entrega(
+            ruta_foto_lugar
+        )
+
+        raise ErrorEntrega(
+            str(error)
+        ) from error
+
+    except Exception as error:
+        eliminar_foto_entrega(
+            ruta_foto_envio
+        )
+
+        eliminar_foto_entrega(
+            ruta_foto_lugar
+        )
+
+        raise ErrorEntrega(
+            "No fue posible guardar "
+            "las fotografías."
+        ) from error
+
+
 async def registrar_entrega(
     db: Session,
     usuario_actual: Usuario,
@@ -88,6 +144,7 @@ async def registrar_entrega(
     latitud: Decimal,
     longitud: Decimal,
     foto_envio: UploadFile,
+    foto_lugar: UploadFile,
 ) -> Entrega:
     agencia = buscar_agencia_por_id(
         db=db,
@@ -124,19 +181,13 @@ async def registrar_entrega(
         longitud=longitud,
     )
 
-    ruta_foto_envio: str | None = None
-
-    try:
-        ruta_foto_envio = (
-            await guardar_foto_entrega(
-                foto=foto_envio,
-            )
-        )
-
-    except ErrorArchivoEntrega as error:
-        raise ErrorEntrega(
-            str(error)
-        ) from error
+    (
+        ruta_foto_envio,
+        ruta_foto_lugar,
+    ) = await guardar_fotografias_entrega(
+        foto_envio=foto_envio,
+        foto_lugar=foto_lugar,
+    )
 
     nueva_entrega = Entrega(
         usuario_id=usuario_actual.id,
@@ -144,7 +195,7 @@ async def registrar_entrega(
         envio=envio,
         comentario=comentario_limpio,
         foto_envio=ruta_foto_envio,
-        foto_lugar=None,
+        foto_lugar=ruta_foto_lugar,
         latitud=latitud,
         longitud=longitud,
     )
@@ -162,6 +213,10 @@ async def registrar_entrega(
             ruta_foto_envio
         )
 
+        eliminar_foto_entrega(
+            ruta_foto_lugar
+        )
+
         raise ErrorEntrega(
             f"El número de envío {envio} "
             "ya fue registrado."
@@ -172,6 +227,10 @@ async def registrar_entrega(
 
         eliminar_foto_entrega(
             ruta_foto_envio
+        )
+
+        eliminar_foto_entrega(
+            ruta_foto_lugar
         )
 
         raise ErrorEntrega(

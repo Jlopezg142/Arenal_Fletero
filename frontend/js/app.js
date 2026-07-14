@@ -91,6 +91,14 @@ const estadoAgencias = document.getElementById(
     "estado-agencias"
 );
 
+const inputFotoEnvio = document.getElementById(
+    "foto_envio"
+);
+
+const inputFotoLugar = document.getElementById(
+    "foto_lugar"
+);
+
 
 /* =========================================================
    ELEMENTOS DEL ADMINISTRADOR
@@ -183,6 +191,7 @@ function obtenerUsuarioGuardado() {
         return JSON.parse(
             usuarioGuardado
         );
+
     } catch {
         sessionStorage.removeItem(
             "arenal_usuario"
@@ -453,6 +462,7 @@ formLogin.addEventListener(
         );
 
         botonLogin.disabled = true;
+
         botonLogin.textContent = (
             "Ingresando..."
         );
@@ -498,6 +508,7 @@ formLogin.addEventListener(
 
         } finally {
             botonLogin.disabled = false;
+
             botonLogin.textContent = (
                 "Ingresar"
             );
@@ -559,7 +570,7 @@ function reiniciarPanelAdministrador() {
     cuerpoTablaEntregas.innerHTML = `
         <tr>
             <td
-                colspan="8"
+                colspan="9"
                 class="tabla-vacia"
             >
                 No hay información para mostrar.
@@ -596,7 +607,7 @@ botonCerrarSesionAdmin.addEventListener(
 
 
 /* =========================================================
-   CATÁLOGO DE AGENCIAS PARA FLETERO
+   CATÁLOGO DE AGENCIAS
 ========================================================= */
 
 function reiniciarListadoAgencias() {
@@ -851,6 +862,7 @@ botonObtenerUbicacion.addEventListener(
                         + "Se conservará la ubicación anterior.",
                         "error"
                     );
+
                 } else {
                     eliminarUbicacion();
 
@@ -870,6 +882,47 @@ botonObtenerUbicacion.addEventListener(
         );
     }
 );
+
+
+/* =========================================================
+   VALIDACIONES DE FOTOGRAFÍAS
+========================================================= */
+
+function fotografiaSeleccionada(inputFoto) {
+    return Boolean(
+        inputFoto.files
+        && inputFoto.files.length > 0
+    );
+}
+
+
+function validarFotografias() {
+    if (!fotografiaSeleccionada(inputFotoEnvio)) {
+        mostrarMensaje(
+            mensajeEntrega,
+            "Debes seleccionar la fotografía del envío.",
+            "error"
+        );
+
+        inputFotoEnvio.focus();
+
+        return false;
+    }
+
+    if (!fotografiaSeleccionada(inputFotoLugar)) {
+        mostrarMensaje(
+            mensajeEntrega,
+            "Debes seleccionar la fotografía del lugar.",
+            "error"
+        );
+
+        inputFotoLugar.focus();
+
+        return false;
+    }
+
+    return true;
+}
 
 
 /* =========================================================
@@ -926,6 +979,10 @@ formEntrega.addEventListener(
             return;
         }
 
+        if (!validarFotografias()) {
+            return;
+        }
+
         if (!ubicacionDisponible()) {
             mostrarMensaje(
                 mensajeEntrega,
@@ -966,6 +1023,8 @@ formEntrega.addEventListener(
         botonRegistrar.disabled = true;
         botonObtenerUbicacion.disabled = true;
         selectAgencia.disabled = true;
+        inputFotoEnvio.disabled = true;
+        inputFotoLugar.disabled = true;
 
         botonRegistrar.textContent = (
             "Registrando..."
@@ -987,17 +1046,6 @@ formEntrega.addEventListener(
             const datos = await respuesta.json();
 
             if (!respuesta.ok) {
-                if (
-                    respuesta.status === 401
-                    || respuesta.status === 403
-                ) {
-                    throw new Error(
-                        datos.detail
-                        || "No tiene permisos "
-                        + "para registrar la entrega."
-                    );
-                }
-
                 throw new Error(
                     datos.detail
                     || "No fue posible registrar "
@@ -1035,6 +1083,8 @@ formEntrega.addEventListener(
             botonRegistrar.disabled = false;
             botonObtenerUbicacion.disabled = false;
             selectAgencia.disabled = false;
+            inputFotoEnvio.disabled = false;
+            inputFotoLugar.disabled = false;
         }
     }
 );
@@ -1137,7 +1187,7 @@ async function cargarFleterosAdministrador() {
 
 
 /* =========================================================
-   CONSULTA DE ENTREGAS DEL ADMINISTRADOR
+   CONSULTA ADMINISTRATIVA
 ========================================================= */
 
 function formatearFechaHora(fechaTexto) {
@@ -1213,11 +1263,34 @@ function crearEnlaceTabla(
 }
 
 
+function crearCeldaFotografia(
+    fotografiaUrl
+) {
+    const celda = document.createElement(
+        "td"
+    );
+
+    if (fotografiaUrl) {
+        celda.appendChild(
+            crearEnlaceTabla(
+                "Ver",
+                fotografiaUrl
+            )
+        );
+
+    } else {
+        celda.textContent = "—";
+    }
+
+    return celda;
+}
+
+
 function mostrarTablaVacia(mensaje) {
     cuerpoTablaEntregas.innerHTML = `
         <tr>
             <td
-                colspan="8"
+                colspan="9"
                 class="tabla-vacia"
             >
                 ${mensaje}
@@ -1293,23 +1366,16 @@ function renderizarEntregas(entregas) {
             )
         );
 
-        const celdaFoto = document.createElement(
-            "td"
+        fila.appendChild(
+            crearCeldaFotografia(
+                entrega.foto_envio
+            )
         );
 
-        if (entrega.foto_envio) {
-            celdaFoto.appendChild(
-                crearEnlaceTabla(
-                    "Ver",
-                    entrega.foto_envio
-                )
-            );
-        } else {
-            celdaFoto.textContent = "—";
-        }
-
         fila.appendChild(
-            celdaFoto
+            crearCeldaFotografia(
+                entrega.foto_lugar
+            )
         );
 
         const celdaMapa = document.createElement(
@@ -1320,13 +1386,17 @@ function renderizarEntregas(entregas) {
             entrega.latitud !== null
             && entrega.longitud !== null
         ) {
+            const coordenadas = (
+                `${entrega.latitud},`
+                + `${entrega.longitud}`
+            );
+
             const urlMapa = (
                 "https://www.google.com/maps"
-                + `/search/?api=1&query=${
-                    encodeURIComponent(
-                        `${entrega.latitud},${entrega.longitud}`
-                    )
-                }`
+                + "/search/?api=1&query="
+                + encodeURIComponent(
+                    coordenadas
+                )
             );
 
             celdaMapa.appendChild(
@@ -1335,6 +1405,7 @@ function renderizarEntregas(entregas) {
                     urlMapa
                 )
             );
+
         } else {
             celdaMapa.textContent = "—";
         }
@@ -1536,7 +1607,7 @@ async function inicializarPanelAdministrador() {
 
 
 /* =========================================================
-   RESTAURAR SESIÓN AL RECARGAR
+   RESTAURAR SESIÓN
 ========================================================= */
 
 async function restaurarSesion() {

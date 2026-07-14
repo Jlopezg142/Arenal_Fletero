@@ -21,6 +21,7 @@
         <header class="encabezado">
             <div class="titulo-aplicacion">
                 <h1>Arenal Fletero</h1>
+
                 <p id="subtitulo-aplicacion">
                     Registro de entregas
                 </p>
@@ -181,6 +182,27 @@
                     >
 
                     <small>
+                        Fotografía obligatoria del documento físico.
+                        Formatos permitidos: JPG, JPEG y PNG.
+                    </small>
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="foto_lugar">
+                        Fotografía del lugar
+                    </label>
+
+                    <input
+                        type="file"
+                        id="foto_lugar"
+                        name="foto_lugar"
+                        accept="image/jpeg,image/png"
+                        capture="environment"
+                        required
+                    >
+
+                    <small>
+                        Fotografía obligatoria del lugar de entrega.
                         Formatos permitidos: JPG, JPEG y PNG.
                     </small>
                 </div>
@@ -338,7 +360,8 @@
                             <th>Fletero</th>
                             <th>Latitud</th>
                             <th>Longitud</th>
-                            <th>Foto</th>
+                            <th>Foto envío</th>
+                            <th>Foto lugar</th>
                             <th>Mapa</th>
                         </tr>
                     </thead>
@@ -346,7 +369,7 @@
                     <tbody id="cuerpo-tabla-entregas">
                         <tr>
                             <td
-                                colspan="8"
+                                colspan="9"
                                 class="tabla-vacia"
                             >
                                 Cargando entregas...
@@ -371,6 +394,6 @@
         <span>Jl-A</span>
     </footer>
 
-    <script src="./js/app.js?v=1.3.0"></script>
+    <script src="./js/app.js?v=2.1.0"></script>
 </body>
 </html>

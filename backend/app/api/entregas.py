@@ -227,6 +227,14 @@ async def crear_entrega(
             "Formatos permitidos: JPG, JPEG y PNG."
         ),
     ),
+    foto_lugar: UploadFile = File(
+        ...,
+        description=(
+            "Fotografía obligatoria del lugar "
+            "de entrega. Formatos permitidos: "
+            "JPG, JPEG y PNG."
+        ),
+    ),
     db: Session = Depends(get_db),
     usuario_actual: Usuario = Depends(
         obtener_fletero
@@ -242,6 +250,7 @@ async def crear_entrega(
             latitud=latitud,
             longitud=longitud,
             foto_envio=foto_envio,
+            foto_lugar=foto_lugar,
         )
 
     except ErrorEntrega as error:

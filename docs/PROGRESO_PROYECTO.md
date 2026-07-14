@@ -373,3 +373,45 @@ Estado del proyecto: Frontend funcional para registro de entregas.
 
 Versión estable.
 Cierre funcional de Arenal Fletero v1.
+
+# Versión 2.1 – Evidencia fotográfica completa
+
+Fecha: 14/07/2026
+
+## Objetivo
+
+Completar la evidencia de cada entrega mediante dos fotografías obligatorias:
+
+- Fotografía del envío.
+- Fotografía del lugar de entrega.
+
+## Funcionalidades implementadas
+
+- Se agregó la fotografía obligatoria del lugar.
+- El formulario del fletero exige ambas fotografías.
+- El backend recibe `foto_envio` y `foto_lugar`.
+- Ambas imágenes son validadas como JPG, JPEG o PNG.
+- Cada fotografía admite un tamaño máximo de 5 MB.
+- Si falla el almacenamiento de una fotografía, se elimina la otra para evitar archivos huérfanos.
+- Si falla el registro en PostgreSQL, se eliminan ambas fotografías.
+- La tabla administrativa muestra:
+  - Foto envío.
+  - Foto lugar.
+- Ambas fotografías pueden abrirse desde el panel administrativo.
+- Se mantuvo la restricción que impide al administrador registrar entregas.
+- Se verificó el funcionamiento desde computadora.
+
+## Pruebas realizadas
+
+- Registro exitoso con ambas fotografías.
+- Validación de fotografías obligatorias.
+- Almacenamiento de ambas rutas en la base de datos.
+- Visualización de ambas fotografías en el panel administrativo.
+- Funcionamiento correcto de filtros, coordenadas y mapa.
+
+## Estado
+
+Versión estable.
+
+Lista para iniciar la versión 2.2:
+Exportación CSV.
