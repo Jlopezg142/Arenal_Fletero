@@ -286,3 +286,57 @@ Sí
 Estado Git:
 
 Working tree clean
+
+# Versión 1.1 – Frontend inicial del fletero
+
+Fecha: 13/07/2026
+
+## Objetivo
+Crear la primera interfaz web para el fletero, eliminando la dependencia de Swagger para el registro de entregas.
+
+## Funcionalidades implementadas
+
+- Inicio de sesión desde la aplicación web.
+- Formulario de registro de entregas.
+- Carga de fotografía del envío.
+- Obtención automática de ubicación GPS mediante el navegador.
+- Validación obligatoria de ubicación antes del registro.
+- Conservación de la ubicación cuando ocurre un error de validación.
+- Mensajes de éxito y error más claros para el usuario.
+- Integración completa con la API de FastAPI.
+
+## Mejoras técnicas
+
+- Docker configurado para servir el frontend.
+- Frontend servido desde `/app`.
+- Persistencia de fotografías mediante volumen Docker.
+- Mejor manejo del estado de los botones.
+- Mejor experiencia de usuario durante el registro.
+
+## Estado
+
+Versión estable.
+Lista para iniciar el desarrollo de la versión 1.2.
+
+# Versión 1.1
+
+Fecha: 14/07/2026
+
+## Funcionalidades implementadas
+
+- Desarrollo del frontend web inicial.
+- Pantalla de inicio de sesión.
+- Diseño institucional con colores de El Arenal.
+- Integración del logotipo de la empresa.
+- Inclusión de sello de agua "Jl-A".
+- Formulario de registro de entregas.
+- Captura de fotografía.
+- Captura de ubicación GPS.
+- Validación para exigir ubicación antes del registro.
+- Conservación de la ubicación al corregir errores del formulario.
+- Selector automático de agencias activas.
+- Carga dinámica de agencias desde la API.
+- Mensajes de éxito y error mejorados.
+- Correcciones generales del frontend.
+
+Estado del proyecto: Frontend funcional para registro de entregas.

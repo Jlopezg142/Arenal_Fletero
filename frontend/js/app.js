@@ -4,6 +4,7 @@ const API_URL = "";
 
 let ubicacionActual = null;
 
+
 const seccionLogin = document.getElementById(
     "seccion-login"
 );
@@ -52,6 +53,13 @@ const inputLongitud = document.getElementById(
     "longitud"
 );
 
+const selectAgencia = document.getElementById(
+    "agencia_id"
+);
+
+const estadoAgencias = document.getElementById(
+    "estado-agencias"
+);
 
 function obtenerToken() {
     return sessionStorage.getItem(
@@ -204,6 +212,19 @@ function ubicacionDisponible() {
 }
 
 
+function reiniciarListadoAgencias() {
+    selectAgencia.disabled = true;
+
+    selectAgencia.innerHTML = `
+        <option value="">
+            Cargando agencias...
+        </option>
+    `;
+
+    estadoAgencias.textContent = "";
+}
+
+
 async function iniciarSesion(
     usuario,
     password
@@ -252,6 +273,123 @@ async function iniciarSesion(
 }
 
 
+async function cargarAgenciasActivas() {
+    const token = obtenerToken();
+
+    reiniciarListadoAgencias();
+
+    if (!token) {
+        selectAgencia.innerHTML = `
+            <option value="">
+                Sesión no disponible
+            </option>
+        `;
+
+        estadoAgencias.textContent = "";
+
+        return;
+    }
+
+    try {
+        const respuesta = await fetch(
+            `${API_URL}/agencias/activas`,
+            {
+                method: "GET",
+                headers: {
+                    Authorization:
+                        `Bearer ${token}`,
+                },
+            }
+        );
+
+        const datos = await respuesta.json();
+
+        if (!respuesta.ok) {
+            if (
+                respuesta.status === 401
+                || respuesta.status === 403
+            ) {
+                eliminarToken();
+
+                mostrarFormularioLogin();
+
+                mostrarMensaje(
+                    mensajeLogin,
+                    "La sesión ha finalizado. "
+                    + "Inicia sesión nuevamente.",
+                    "error"
+                );
+
+                return;
+            }
+
+            throw new Error(
+                datos.detail
+                || "No fue posible cargar las agencias."
+            );
+        }
+
+        const agencias = Array.isArray(datos)
+            ? datos
+            : [];
+
+        selectAgencia.innerHTML = `
+            <option value="">
+                Seleccione una agencia
+            </option>
+        `;
+
+        if (agencias.length === 0) {
+            selectAgencia.innerHTML = `
+                <option value="">
+                    No hay agencias activas
+                </option>
+            `;
+
+            selectAgencia.disabled = true;
+
+            estadoAgencias.textContent = "";
+
+            return;
+        }
+
+        agencias.forEach((agencia) => {
+            const opcion = document.createElement(
+                "option"
+            );
+
+            opcion.value = agencia.id;
+            opcion.textContent = agencia.nombre;
+
+            selectAgencia.appendChild(
+                opcion
+            );
+        });
+
+        selectAgencia.disabled = false;
+
+        estadoAgencias.textContent = "";
+
+    } catch (error) {
+        selectAgencia.innerHTML = `
+            <option value="">
+                Error al cargar agencias
+            </option>
+        `;
+
+        selectAgencia.disabled = true;
+
+        estadoAgencias.textContent = "";
+
+        mostrarMensaje(
+            mensajeEntrega,
+            error.message,
+            "error"
+        );
+    }
+}
+
+
 formLogin.addEventListener(
     "submit",
     async (evento) => {
@@ -280,6 +418,8 @@ formLogin.addEventListener(
             formLogin.reset();
 
             mostrarFormularioEntrega();
+
+            await cargarAgenciasActivas();
 
         } catch (error) {
             mostrarMensaje(
@@ -360,11 +500,6 @@ botonObtenerUbicacion.addEventListener(
             },
 
             (error) => {
-                /*
-                Si ya había una ubicación válida,
-                se conserva aunque falle el intento
-                de actualizarla.
-                */
                 if (ubicacionDisponible()) {
                     restaurarUbicacionEnFormulario();
 
@@ -419,6 +554,18 @@ formEntrega.addEventListener(
             return;
         }
 
+        if (!selectAgencia.value) {
+            mostrarMensaje(
+                mensajeEntrega,
+                "Debes seleccionar una agencia.",
+                "error"
+            );
+
+            selectAgencia.focus();
+
+            return;
+        }
+
         if (!ubicacionDisponible()) {
             mostrarMensaje(
                 mensajeEntrega,
@@ -435,15 +582,15 @@ formEntrega.addEventListener(
             return;
         }
 
-        /*
-        Se vuelven a colocar las coordenadas antes
-        de crear FormData. Esto evita perderlas si
-        el navegador restableció los campos ocultos.
-        */
         restaurarUbicacionEnFormulario();
 
         const datosEntrega = new FormData(
             formEntrega
+        );
+
+        datosEntrega.set(
+            "agencia_id",
+            selectAgencia.value
         );
 
         datosEntrega.set(
@@ -458,6 +605,7 @@ formEntrega.addEventListener(
 
         botonRegistrar.disabled = true;
         botonObtenerUbicacion.disabled = true;
+        selectAgencia.disabled = true;
 
         botonRegistrar.textContent = (
             "Registrando..."
@@ -514,18 +662,11 @@ formEntrega.addEventListener(
 
             formEntrega.reset();
 
-            /*
-            La ubicación solo se elimina después
-            de un registro exitoso.
-            */
             eliminarUbicacion();
 
+            selectAgencia.value = "";
+
         } catch (error) {
-            /*
-            Ante errores como agencia inexistente,
-            se conservan la ubicación, la fotografía
-            y los demás datos del formulario.
-            */
             restaurarUbicacionEnFormulario();
 
             mostrarMensaje(
@@ -541,6 +682,7 @@ formEntrega.addEventListener(
 
             botonRegistrar.disabled = false;
             botonObtenerUbicacion.disabled = false;
+            selectAgencia.disabled = false;
         }
     }
 );
@@ -558,6 +700,16 @@ botonCerrarSesion.addEventListener(
         botonRegistrar.disabled = false;
         botonObtenerUbicacion.disabled = false;
 
+        selectAgencia.disabled = true;
+
+        selectAgencia.innerHTML = `
+            <option value="">
+                Cargando agencias...
+            </option>
+        `;
+
+        estadoAgencias.textContent = "";
+
         ocultarMensaje(
             mensajeEntrega
         );
@@ -569,6 +721,8 @@ botonCerrarSesion.addEventListener(
 
 if (obtenerToken()) {
     mostrarFormularioEntrega();
+
+    cargarAgenciasActivas();
 } else {
     mostrarFormularioLogin();
 }

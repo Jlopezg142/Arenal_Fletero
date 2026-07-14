@@ -6,7 +6,7 @@ from app.models.agencia import Agencia
 
 def buscar_por_id(
     db: Session,
-    agencia_id: int
+    agencia_id: int,
 ) -> Agencia | None:
     consulta = select(Agencia).where(
         Agencia.id == agencia_id
@@ -17,7 +17,7 @@ def buscar_por_id(
 
 def buscar_por_nombre(
     db: Session,
-    nombre: str
+    nombre: str,
 ) -> Agencia | None:
     consulta = (
         select(Agencia)
@@ -31,7 +31,7 @@ def buscar_por_nombre(
 
 
 def listar_agencias(
-    db: Session
+    db: Session,
 ) -> list[Agencia]:
     consulta = (
         select(Agencia)
@@ -45,9 +45,27 @@ def listar_agencias(
     )
 
 
+def listar_agencias_activas(
+    db: Session,
+) -> list[Agencia]:
+    consulta = (
+        select(Agencia)
+        .where(
+            Agencia.activa.is_(True)
+        )
+        .order_by(
+            Agencia.nombre.asc()
+        )
+    )
+
+    return list(
+        db.scalars(consulta).all()
+    )
+
+
 def crear_agencia(
     db: Session,
-    agencia: Agencia
+    agencia: Agencia,
 ) -> Agencia:
     db.add(agencia)
     db.commit()
@@ -58,7 +76,7 @@ def crear_agencia(
 
 def actualizar_agencia(
     db: Session,
-    agencia: Agencia
+    agencia: Agencia,
 ) -> Agencia:
     db.commit()
     db.refresh(agencia)

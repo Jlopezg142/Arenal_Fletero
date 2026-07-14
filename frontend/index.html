@@ -19,15 +19,19 @@
 <body>
     <main class="contenedor-principal">
         <header class="encabezado">
-            <div class="logo">AF</div>
-
-            <div>
+            <div class="titulo-aplicacion">
                 <h1>Arenal Fletero</h1>
                 <p>Registro de entregas</p>
             </div>
+
+            <img
+                src="./images/logo-arenal.png"
+                alt="El Arenal"
+                class="logo-empresa"
+            >
         </header>
 
-        <!-- Sección de inicio de sesión -->
+        <!-- Inicio de sesión -->
         <section
             id="seccion-login"
             class="tarjeta"
@@ -81,7 +85,7 @@
             ></div>
         </section>
 
-        <!-- Sección de registro de entrega -->
+        <!-- Registro de entrega -->
         <section
             id="seccion-entrega"
             class="tarjeta oculto"
@@ -110,14 +114,21 @@
                         Agencia
                     </label>
 
-                    <input
-                        type="number"
+                    <select
                         id="agencia_id"
                         name="agencia_id"
-                        min="1"
-                        inputmode="numeric"
                         required
+                        disabled
                     >
+                        <option value="">
+                            Cargando agencias...
+                        </option>
+                    </select>
+
+                    <small
+                        id="estado-agencias"
+                        class="oculto"
+                    ></small>
                 </div>
 
                 <div class="grupo-campo">
@@ -183,10 +194,6 @@
                         Obtener ubicación
                     </button>
 
-                    <!--
-                    Estos valores no son editables por el fletero.
-                    JavaScript los completa automáticamente.
-                    -->
                     <input
                         type="hidden"
                         id="latitud"
@@ -216,6 +223,10 @@
         </section>
     </main>
 
-    <script src="./js/app.js"></script>
+    <footer class="pie-pagina">
+        <span>Jl-A</span>
+    </footer>
+
+    <script src="./js/app.js?v=1.2.1"></script>
 </body>
 </html>

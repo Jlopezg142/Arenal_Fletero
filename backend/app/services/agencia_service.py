@@ -8,6 +8,7 @@ from app.repositories.agencia_repository import (
     buscar_por_nombre,
     crear_agencia,
     listar_agencias,
+    listar_agencias_activas,
 )
 
 
@@ -16,18 +17,24 @@ class ErrorAgencia(Exception):
 
 
 def obtener_agencias(
-    db: Session
+    db: Session,
 ) -> list[Agencia]:
     return listar_agencias(db)
 
 
+def obtener_agencias_activas(
+    db: Session,
+) -> list[Agencia]:
+    return listar_agencias_activas(db)
+
+
 def obtener_agencia_por_id(
     db: Session,
-    agencia_id: int
+    agencia_id: int,
 ) -> Agencia:
     agencia = buscar_por_id(
         db=db,
-        agencia_id=agencia_id
+        agencia_id=agencia_id,
     )
 
     if agencia is None:
@@ -40,7 +47,7 @@ def obtener_agencia_por_id(
 
 def crear_nueva_agencia(
     db: Session,
-    nombre: str
+    nombre: str,
 ) -> Agencia:
     nombre_limpio = " ".join(
         nombre.strip().split()
@@ -48,7 +55,7 @@ def crear_nueva_agencia(
 
     agencia_existente = buscar_por_nombre(
         db=db,
-        nombre=nombre_limpio
+        nombre=nombre_limpio,
     )
 
     if agencia_existente is not None:
@@ -58,13 +65,13 @@ def crear_nueva_agencia(
 
     nueva_agencia = Agencia(
         nombre=nombre_limpio,
-        activa=True
+        activa=True,
     )
 
     try:
         return crear_agencia(
             db=db,
-            agencia=nueva_agencia
+            agencia=nueva_agencia,
         )
 
     except IntegrityError as error:
@@ -78,11 +85,11 @@ def crear_nueva_agencia(
 def modificar_agencia(
     db: Session,
     agencia_id: int,
-    nombre: str
+    nombre: str,
 ) -> Agencia:
     agencia = obtener_agencia_por_id(
         db=db,
-        agencia_id=agencia_id
+        agencia_id=agencia_id,
     )
 
     nombre_limpio = " ".join(
@@ -91,7 +98,7 @@ def modificar_agencia(
 
     agencia_con_mismo_nombre = buscar_por_nombre(
         db=db,
-        nombre=nombre_limpio
+        nombre=nombre_limpio,
     )
 
     if (
@@ -107,7 +114,7 @@ def modificar_agencia(
     try:
         return actualizar_agencia(
             db=db,
-            agencia=agencia
+            agencia=agencia,
         )
 
     except IntegrityError as error:
@@ -121,16 +128,16 @@ def modificar_agencia(
 def cambiar_estado_agencia(
     db: Session,
     agencia_id: int,
-    activa: bool
+    activa: bool,
 ) -> Agencia:
     agencia = obtener_agencia_por_id(
         db=db,
-        agencia_id=agencia_id
+        agencia_id=agencia_id,
     )
 
     agencia.activa = activa
 
     return actualizar_agencia(
         db=db,
-        agencia=agencia
+        agencia=agencia,
     )

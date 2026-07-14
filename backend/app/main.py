@@ -5,7 +5,12 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from app.api.admin import router as admin_router
-from app.api.agencias import router as agencias_router
+from app.api.agencias import (
+    catalogo_router as agencias_catalogo_router,
+)
+from app.api.agencias import (
+    router as agencias_router,
+)
 from app.api.auth import router as auth_router
 from app.api.entregas import router as entregas_router
 from app.api.usuarios import router as usuarios_router
@@ -52,6 +57,7 @@ app.include_router(auth_router)
 app.include_router(admin_router)
 app.include_router(usuarios_router)
 app.include_router(agencias_router)
+app.include_router(agencias_catalogo_router)
 app.include_router(entregas_router)
 
 
