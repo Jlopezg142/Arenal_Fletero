@@ -1307,7 +1307,9 @@ function renderizarEntregas(entregas) {
         entregas.length
     );
 
-    botonExportar.disabled = true;
+    botonExportar.disabled = (
+        entregas.length === 0
+    );
 
     if (entregas.length === 0) {
         mostrarTablaVacia(
@@ -1456,6 +1458,153 @@ function construirParametrosConsulta() {
 }
 
 
+/* =========================================================
+   EXPORTACIÓN CSV
+========================================================= */
+
+function obtenerNombreArchivoCSV(
+    encabezadoContentDisposition
+) {
+    if (!encabezadoContentDisposition) {
+        return "arenal_entregas.csv";
+    }
+
+    const coincidencia = encabezadoContentDisposition.match(
+        /filename="?([^"]+)"?/i
+    );
+
+    if (!coincidencia) {
+        return "arenal_entregas.csv";
+    }
+
+    return coincidencia[1];
+}
+
+
+async function exportarCSV() {
+    const token = obtenerToken();
+
+    if (!token) {
+        cerrarSesion();
+
+        mostrarMensaje(
+            mensajeLogin,
+            "La sesión ha finalizado. "
+            + "Inicia sesión nuevamente.",
+            "error"
+        );
+
+        return;
+    }
+
+    ocultarMensaje(
+        mensajeAdministrador
+    );
+
+    botonExportar.disabled = true;
+    botonExportar.textContent = (
+        "Exportando..."
+    );
+
+    try {
+        const parametros = construirParametrosConsulta();
+
+        const url = parametros.toString()
+            ? (
+                `${API_URL}/admin/exportar-entregas.csv`
+                + `?${parametros.toString()}`
+            )
+            : `${API_URL}/admin/exportar-entregas.csv`;
+
+        const respuesta = await fetch(
+            url,
+            {
+                method: "GET",
+                headers: {
+                    Authorization:
+                        `Bearer ${token}`,
+                },
+            }
+        );
+
+        if (!respuesta.ok) {
+            let mensaje = (
+                "No fue posible exportar el CSV."
+            );
+
+            try {
+                const datosError = await respuesta.json();
+
+                mensaje = (
+                    datosError.detail
+                    || mensaje
+                );
+
+            } catch {
+                // El servidor podría responder texto.
+            }
+
+            throw new Error(
+                mensaje
+            );
+        }
+
+        const archivo = await respuesta.blob();
+
+        const nombreArchivo = obtenerNombreArchivoCSV(
+            respuesta.headers.get(
+                "Content-Disposition"
+            )
+        );
+
+        const urlTemporal = URL.createObjectURL(
+            archivo
+        );
+
+        const enlace = document.createElement(
+            "a"
+        );
+
+        enlace.href = urlTemporal;
+        enlace.download = nombreArchivo;
+
+        document.body.appendChild(
+            enlace
+        );
+
+        enlace.click();
+
+        enlace.remove();
+
+        URL.revokeObjectURL(
+            urlTemporal
+        );
+
+        mostrarMensaje(
+            mensajeAdministrador,
+            "El archivo CSV fue generado correctamente.",
+            "exito"
+        );
+
+    } catch (error) {
+        mostrarMensaje(
+            mensajeAdministrador,
+            error.message,
+            "error"
+        );
+
+    } finally {
+        botonExportar.textContent = (
+            "Exportar CSV"
+        );
+
+        botonExportar.disabled = (
+            Number(totalEntregas.textContent) === 0
+        );
+    }
+}
+
+
 async function consultarEntregasAdministrador() {
     if (consultaAdministradorEnProceso) {
         return;
@@ -1467,6 +1616,8 @@ async function consultarEntregasAdministrador() {
         && filtroFechaFin.value
             < filtroFechaInicio.value
     ) {
+        botonExportar.disabled = true;
+
         mostrarMensaje(
             mensajeAdministrador,
             "La fecha final no puede ser menor "
@@ -1488,6 +1639,7 @@ async function consultarEntregasAdministrador() {
     );
 
     totalEntregas.textContent = "0";
+    botonExportar.disabled = true;
 
     try {
         const token = obtenerToken();
@@ -1529,6 +1681,7 @@ async function consultarEntregasAdministrador() {
 
     } catch (error) {
         totalEntregas.textContent = "0";
+        botonExportar.disabled = true;
 
         mostrarTablaVacia(
             "No fue posible cargar las entregas."
@@ -1571,6 +1724,12 @@ formFiltros.addEventListener(
 );
 
 
+botonExportar.addEventListener(
+    "click",
+    exportarCSV
+);
+
+
 /* =========================================================
    INICIALIZACIÓN DEL PANEL ADMINISTRATIVO
 ========================================================= */
@@ -1593,6 +1752,8 @@ async function inicializarPanelAdministrador() {
         await consultarEntregasAdministrador();
 
     } catch (error) {
+        botonExportar.disabled = true;
+
         mostrarTablaVacia(
             "No fue posible preparar el panel."
         );

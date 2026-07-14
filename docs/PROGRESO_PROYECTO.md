@@ -415,3 +415,56 @@ Versión estable.
 
 Lista para iniciar la versión 2.2:
 Exportación CSV.
+
+# Versión 2.2 – Exportación CSV
+
+Fecha: 14/07/2026
+
+## Objetivo
+
+Permitir que el administrador descargue las entregas en formato CSV respetando los filtros seleccionados en el panel.
+
+## Funcionalidades implementadas
+
+- Se creó el endpoint administrativo:
+  - GET /admin/exportar-entregas.csv
+- La exportación es exclusiva para usuarios con rol ADMIN.
+- El archivo CSV respeta los filtros activos de:
+  - fecha inicial;
+  - fecha final;
+  - agencia;
+  - fletero.
+- Se agregó el botón Exportar CSV en el panel administrativo.
+- El botón se habilita únicamente cuando existen resultados.
+- La descarga se realiza directamente desde la aplicación.
+- El archivo incluye:
+  - fecha y hora;
+  - número de envío;
+  - agencia;
+  - fletero;
+  - usuario;
+  - comentario;
+  - latitud;
+  - longitud;
+  - URL de fotografía del envío;
+  - URL de fotografía del lugar.
+- Se mantiene la precisión completa de las coordenadas.
+- Se agregó nombre automático con fecha y hora al archivo descargado.
+- El archivo es compatible con Excel mediante codificación UTF-8 con BOM.
+
+## Pruebas realizadas
+
+- Exportación sin filtros.
+- Exportación por rango de fechas.
+- Exportación por agencia.
+- Exportación por fletero.
+- Exportación combinando filtros.
+- Verificación de estructura y contenido del CSV.
+- Verificación de enlaces de ambas fotografías.
+
+## Estado
+
+Versión estable.
+
+Lista para iniciar la versión 2.3:
+Administración visual de agencias.
