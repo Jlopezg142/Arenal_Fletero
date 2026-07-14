@@ -1,4 +1,7 @@
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.exc import (
+    IntegrityError,
+    SQLAlchemyError,
+)
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -9,6 +12,7 @@ from app.models.usuario import Usuario
 from app.repositories.usuario_repository import (
     buscar_por_usuario,
     crear_usuario,
+    listar_fleteros_activos,
 )
 
 
@@ -22,7 +26,9 @@ def crear_administrador_inicial() -> None:
     try:
         usuario_existente = buscar_por_usuario(
             db=db,
-            nombre_usuario=settings.ADMIN_INITIAL_USER
+            nombre_usuario=(
+                settings.ADMIN_INITIAL_USER
+            ),
         )
 
         if usuario_existente is not None:
@@ -34,34 +40,48 @@ def crear_administrador_inicial() -> None:
 
         administrador = Usuario(
             nombre=settings.ADMIN_INITIAL_NAME,
-            usuario=settings.ADMIN_INITIAL_USER.lower(),
+            usuario=(
+                settings.ADMIN_INITIAL_USER.lower()
+            ),
             password_hash=generar_hash_password(
                 settings.ADMIN_INITIAL_PASSWORD
             ),
             rol=Roles.ADMIN,
-            activo=True
+            activo=True,
         )
 
         crear_usuario(
             db=db,
-            usuario=administrador
+            usuario=administrador,
         )
 
         print(
-            "Administrador inicial creado correctamente: "
+            "Administrador inicial creado "
+            "correctamente: "
             f"{settings.ADMIN_INITIAL_USER}"
         )
 
     except SQLAlchemyError as error:
         db.rollback()
+
         print(
-            "No fue posible crear el administrador inicial: "
+            "No fue posible crear el "
+            "administrador inicial: "
             f"{error}"
         )
+
         raise
 
     finally:
         db.close()
+
+
+def obtener_fleteros_activos(
+    db: Session,
+) -> list[Usuario]:
+    return listar_fleteros_activos(
+        db=db
+    )
 
 
 def crear_nuevo_usuario(
@@ -69,37 +89,43 @@ def crear_nuevo_usuario(
     nombre: str,
     nombre_usuario: str,
     password: str,
-    rol: str
+    rol: str,
 ) -> Usuario:
-    nombre_usuario = nombre_usuario.strip().lower()
+    nombre_usuario = (
+        nombre_usuario.strip().lower()
+    )
 
     usuario_existente = buscar_por_usuario(
         db=db,
-        nombre_usuario=nombre_usuario
+        nombre_usuario=nombre_usuario,
     )
 
     if usuario_existente is not None:
         raise ErrorUsuario(
-            "El nombre de usuario ya está registrado."
+            "El nombre de usuario ya está "
+            "registrado."
         )
 
     nuevo_usuario = Usuario(
         nombre=nombre.strip(),
         usuario=nombre_usuario,
-        password_hash=generar_hash_password(password),
+        password_hash=generar_hash_password(
+            password
+        ),
         rol=rol,
-        activo=True
+        activo=True,
     )
 
     try:
         return crear_usuario(
             db=db,
-            usuario=nuevo_usuario
+            usuario=nuevo_usuario,
         )
 
     except IntegrityError as error:
         db.rollback()
 
         raise ErrorUsuario(
-            "El nombre de usuario ya está registrado."
+            "El nombre de usuario ya está "
+            "registrado."
         ) from error

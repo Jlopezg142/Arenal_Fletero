@@ -16,9 +16,10 @@ oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="/auth/login"
 )
 
+
 def obtener_usuario_actual(
     token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ) -> Usuario:
     """
     Valida el JWT y devuelve el usuario autenticado.
@@ -29,7 +30,7 @@ def obtener_usuario_actual(
         detail="Token inválido o vencido.",
         headers={
             "WWW-Authenticate": "Bearer"
-        }
+        },
     )
 
     try:
@@ -46,13 +47,13 @@ def obtener_usuario_actual(
         jwt.ExpiredSignatureError,
         jwt.InvalidTokenError,
         TypeError,
-        ValueError
+        ValueError,
     ) as error:
         raise error_credenciales from error
 
     usuario = buscar_por_id(
         db=db,
-        usuario_id=usuario_id
+        usuario_id=usuario_id,
     )
 
     if usuario is None:
@@ -61,14 +62,14 @@ def obtener_usuario_actual(
     if not usuario.activo:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=Mensajes.USUARIO_INACTIVO
+            detail=Mensajes.USUARIO_INACTIVO,
         )
 
     return usuario
 
 
 def requerir_roles(
-    *roles_permitidos: str
+    *roles_permitidos: str,
 ) -> Callable:
     """
     Crea una dependencia que limita una ruta por rol.
@@ -77,7 +78,7 @@ def requerir_roles(
     def validar_rol(
         usuario_actual: Usuario = Depends(
             obtener_usuario_actual
-        )
+        ),
     ) -> Usuario:
         if usuario_actual.rol not in roles_permitidos:
             raise HTTPException(
@@ -85,7 +86,7 @@ def requerir_roles(
                 detail=(
                     "No tiene permisos para realizar "
                     "esta operación."
-                )
+                ),
             )
 
         return usuario_actual
@@ -97,7 +98,11 @@ obtener_administrador = requerir_roles(
     Roles.ADMIN
 )
 
+obtener_fletero = requerir_roles(
+    Roles.FLETERO
+)
+
 obtener_fletero_o_administrador = requerir_roles(
     Roles.ADMIN,
-    Roles.FLETERO
+    Roles.FLETERO,
 )

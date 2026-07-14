@@ -14,6 +14,7 @@ from fastapi import (
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import (
+    obtener_fletero,
     obtener_fletero_o_administrador,
 )
 from app.database import get_db
@@ -228,7 +229,7 @@ async def crear_entrega(
     ),
     db: Session = Depends(get_db),
     usuario_actual: Usuario = Depends(
-        obtener_fletero_o_administrador
+        obtener_fletero
     ),
 ):
     try:

@@ -2,8 +2,21 @@
 
 const API_URL = "";
 
-let ubicacionActual = null;
+const ROL_ADMIN = "ADMIN";
+const ROL_FLETERO = "FLETERO";
 
+let ubicacionActual = null;
+let usuarioActual = null;
+let consultaAdministradorEnProceso = false;
+
+
+/* =========================================================
+   ELEMENTOS GENERALES
+========================================================= */
+
+const subtituloAplicacion = document.getElementById(
+    "subtitulo-aplicacion"
+);
 
 const seccionLogin = document.getElementById(
     "seccion-login"
@@ -13,16 +26,33 @@ const seccionEntrega = document.getElementById(
     "seccion-entrega"
 );
 
+const seccionAdministrador = document.getElementById(
+    "seccion-administrador"
+);
+
 const formLogin = document.getElementById(
     "form-login"
 );
+
+const botonLogin = document.getElementById(
+    "boton-login"
+);
+
+const mensajeLogin = document.getElementById(
+    "mensaje-login"
+);
+
+
+/* =========================================================
+   ELEMENTOS DEL FLETERO
+========================================================= */
 
 const formEntrega = document.getElementById(
     "form-entrega"
 );
 
-const mensajeLogin = document.getElementById(
-    "mensaje-login"
+const bienvenidaFletero = document.getElementById(
+    "bienvenida-fletero"
 );
 
 const mensajeEntrega = document.getElementById(
@@ -61,6 +91,60 @@ const estadoAgencias = document.getElementById(
     "estado-agencias"
 );
 
+
+/* =========================================================
+   ELEMENTOS DEL ADMINISTRADOR
+========================================================= */
+
+const bienvenidaAdministrador = document.getElementById(
+    "bienvenida-administrador"
+);
+
+const botonCerrarSesionAdmin = document.getElementById(
+    "boton-cerrar-sesion-admin"
+);
+
+const formFiltros = document.getElementById(
+    "form-filtros"
+);
+
+const filtroFechaInicio = document.getElementById(
+    "filtro-fecha-inicio"
+);
+
+const filtroFechaFin = document.getElementById(
+    "filtro-fecha-fin"
+);
+
+const filtroAgencia = document.getElementById(
+    "filtro-agencia"
+);
+
+const filtroFletero = document.getElementById(
+    "filtro-fletero"
+);
+
+const mensajeAdministrador = document.getElementById(
+    "mensaje-administrador"
+);
+
+const totalEntregas = document.getElementById(
+    "total-entregas"
+);
+
+const cuerpoTablaEntregas = document.getElementById(
+    "cuerpo-tabla-entregas"
+);
+
+const botonExportar = document.getElementById(
+    "boton-exportar"
+);
+
+
+/* =========================================================
+   SESIÓN
+========================================================= */
+
 function obtenerToken() {
     return sessionStorage.getItem(
         "arenal_token"
@@ -76,12 +160,88 @@ function guardarToken(token) {
 }
 
 
-function eliminarToken() {
-    sessionStorage.removeItem(
-        "arenal_token"
+function guardarUsuario(usuario) {
+    usuarioActual = usuario;
+
+    sessionStorage.setItem(
+        "arenal_usuario",
+        JSON.stringify(usuario)
     );
 }
 
+
+function obtenerUsuarioGuardado() {
+    const usuarioGuardado = sessionStorage.getItem(
+        "arenal_usuario"
+    );
+
+    if (!usuarioGuardado) {
+        return null;
+    }
+
+    try {
+        return JSON.parse(
+            usuarioGuardado
+        );
+    } catch {
+        sessionStorage.removeItem(
+            "arenal_usuario"
+        );
+
+        return null;
+    }
+}
+
+
+function limpiarSesion() {
+    sessionStorage.removeItem(
+        "arenal_token"
+    );
+
+    sessionStorage.removeItem(
+        "arenal_usuario"
+    );
+
+    usuarioActual = null;
+}
+
+
+async function consultarUsuarioActual() {
+    const token = obtenerToken();
+
+    if (!token) {
+        throw new Error(
+            "No existe una sesión activa."
+        );
+    }
+
+    const respuesta = await fetch(
+        `${API_URL}/auth/me`,
+        {
+            method: "GET",
+            headers: {
+                Authorization:
+                    `Bearer ${token}`,
+            },
+        }
+    );
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok) {
+        throw new Error(
+            datos.detail
+            || "La sesión no es válida."
+        );
+    }
+
+    return datos;
+}
+
+
+/* =========================================================
+   MENSAJES
+========================================================= */
 
 function mostrarMensaje(
     elemento,
@@ -118,27 +278,429 @@ function ocultarMensaje(elemento) {
 }
 
 
-function mostrarFormularioEntrega() {
-    seccionLogin.classList.add(
+/* =========================================================
+   NAVEGACIÓN SEGÚN ROL
+========================================================= */
+
+function ocultarSeccionesPrivadas() {
+    seccionEntrega.classList.add(
         "oculto"
     );
 
-    seccionEntrega.classList.remove(
+    seccionAdministrador.classList.add(
         "oculto"
     );
 }
 
 
 function mostrarFormularioLogin() {
-    seccionEntrega.classList.add(
-        "oculto"
-    );
+    ocultarSeccionesPrivadas();
 
     seccionLogin.classList.remove(
         "oculto"
     );
+
+    subtituloAplicacion.textContent = (
+        "Registro de entregas"
+    );
 }
 
+
+function mostrarFormularioFletero(usuario) {
+    seccionLogin.classList.add(
+        "oculto"
+    );
+
+    seccionAdministrador.classList.add(
+        "oculto"
+    );
+
+    seccionEntrega.classList.remove(
+        "oculto"
+    );
+
+    subtituloAplicacion.textContent = (
+        "Registro de entregas"
+    );
+
+    bienvenidaFletero.textContent = (
+        `Bienvenido, ${usuario.nombre}. `
+        + "Registra la evidencia del envío."
+    );
+}
+
+
+function mostrarPanelAdministrador(usuario) {
+    seccionLogin.classList.add(
+        "oculto"
+    );
+
+    seccionEntrega.classList.add(
+        "oculto"
+    );
+
+    seccionAdministrador.classList.remove(
+        "oculto"
+    );
+
+    subtituloAplicacion.textContent = (
+        "Administración de entregas"
+    );
+
+    bienvenidaAdministrador.textContent = (
+        `Bienvenido, ${usuario.nombre}. `
+        + "Consulta y filtra las entregas registradas."
+    );
+}
+
+
+async function prepararInterfazPorRol(usuario) {
+    guardarUsuario(usuario);
+
+    if (usuario.rol === ROL_ADMIN) {
+        mostrarPanelAdministrador(
+            usuario
+        );
+
+        await inicializarPanelAdministrador();
+
+        return;
+    }
+
+    if (usuario.rol === ROL_FLETERO) {
+        mostrarFormularioFletero(
+            usuario
+        );
+
+        await cargarAgenciasActivas();
+
+        return;
+    }
+
+    limpiarSesion();
+    mostrarFormularioLogin();
+
+    mostrarMensaje(
+        mensajeLogin,
+        "El usuario no tiene un rol válido.",
+        "error"
+    );
+}
+
+
+/* =========================================================
+   LOGIN
+========================================================= */
+
+async function iniciarSesion(
+    usuario,
+    password
+) {
+    const datosLogin = new URLSearchParams();
+
+    datosLogin.append(
+        "username",
+        usuario
+    );
+
+    datosLogin.append(
+        "password",
+        password
+    );
+
+    const respuesta = await fetch(
+        `${API_URL}/auth/login`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type":
+                    "application/x-www-form-urlencoded",
+            },
+            body: datosLogin,
+        }
+    );
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok) {
+        throw new Error(
+            datos.detail
+            || "No fue posible iniciar sesión."
+        );
+    }
+
+    if (
+        !datos.access_token
+        || !datos.usuario
+    ) {
+        throw new Error(
+            "La respuesta del servidor "
+            + "no contiene la sesión completa."
+        );
+    }
+
+    return datos;
+}
+
+
+formLogin.addEventListener(
+    "submit",
+    async (evento) => {
+        evento.preventDefault();
+
+        ocultarMensaje(
+            mensajeLogin
+        );
+
+        botonLogin.disabled = true;
+        botonLogin.textContent = (
+            "Ingresando..."
+        );
+
+        const nombreUsuario = document.getElementById(
+            "usuario"
+        ).value.trim();
+
+        const password = document.getElementById(
+            "password"
+        ).value;
+
+        try {
+            const datosSesion = await iniciarSesion(
+                nombreUsuario,
+                password
+            );
+
+            guardarToken(
+                datosSesion.access_token
+            );
+
+            guardarUsuario(
+                datosSesion.usuario
+            );
+
+            formLogin.reset();
+
+            await prepararInterfazPorRol(
+                datosSesion.usuario
+            );
+
+        } catch (error) {
+            limpiarSesion();
+
+            mostrarFormularioLogin();
+
+            mostrarMensaje(
+                mensajeLogin,
+                error.message,
+                "error"
+            );
+
+        } finally {
+            botonLogin.disabled = false;
+            botonLogin.textContent = (
+                "Ingresar"
+            );
+        }
+    }
+);
+
+
+/* =========================================================
+   CIERRE DE SESIÓN
+========================================================= */
+
+function reiniciarFormularioFletero() {
+    formEntrega.reset();
+
+    eliminarUbicacion();
+
+    botonRegistrar.disabled = false;
+    botonObtenerUbicacion.disabled = false;
+
+    selectAgencia.disabled = true;
+
+    selectAgencia.innerHTML = `
+        <option value="">
+            Cargando agencias...
+        </option>
+    `;
+
+    estadoAgencias.textContent = "";
+
+    ocultarMensaje(
+        mensajeEntrega
+    );
+}
+
+
+function reiniciarPanelAdministrador() {
+    formFiltros.reset();
+
+    filtroAgencia.disabled = true;
+    filtroFletero.disabled = true;
+
+    filtroAgencia.innerHTML = `
+        <option value="">
+            Todas
+        </option>
+    `;
+
+    filtroFletero.innerHTML = `
+        <option value="">
+            Todos
+        </option>
+    `;
+
+    totalEntregas.textContent = "0";
+
+    botonExportar.disabled = true;
+
+    cuerpoTablaEntregas.innerHTML = `
+        <tr>
+            <td
+                colspan="8"
+                class="tabla-vacia"
+            >
+                No hay información para mostrar.
+            </td>
+        </tr>
+    `;
+
+    ocultarMensaje(
+        mensajeAdministrador
+    );
+}
+
+
+function cerrarSesion() {
+    limpiarSesion();
+
+    reiniciarFormularioFletero();
+    reiniciarPanelAdministrador();
+
+    mostrarFormularioLogin();
+}
+
+
+botonCerrarSesion.addEventListener(
+    "click",
+    cerrarSesion
+);
+
+
+botonCerrarSesionAdmin.addEventListener(
+    "click",
+    cerrarSesion
+);
+
+
+/* =========================================================
+   CATÁLOGO DE AGENCIAS PARA FLETERO
+========================================================= */
+
+function reiniciarListadoAgencias() {
+    selectAgencia.disabled = true;
+
+    selectAgencia.innerHTML = `
+        <option value="">
+            Cargando agencias...
+        </option>
+    `;
+
+    estadoAgencias.textContent = "";
+}
+
+
+async function obtenerAgenciasActivas() {
+    const token = obtenerToken();
+
+    const respuesta = await fetch(
+        `${API_URL}/agencias/activas`,
+        {
+            method: "GET",
+            headers: {
+                Authorization:
+                    `Bearer ${token}`,
+            },
+        }
+    );
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok) {
+        throw new Error(
+            datos.detail
+            || "No fue posible cargar las agencias."
+        );
+    }
+
+    return Array.isArray(datos)
+        ? datos
+        : [];
+}
+
+
+async function cargarAgenciasActivas() {
+    reiniciarListadoAgencias();
+
+    try {
+        const agencias = await obtenerAgenciasActivas();
+
+        selectAgencia.innerHTML = `
+            <option value="">
+                Seleccione una agencia
+            </option>
+        `;
+
+        if (agencias.length === 0) {
+            selectAgencia.innerHTML = `
+                <option value="">
+                    No hay agencias activas
+                </option>
+            `;
+
+            selectAgencia.disabled = true;
+
+            return;
+        }
+
+        agencias.forEach((agencia) => {
+            const opcion = document.createElement(
+                "option"
+            );
+
+            opcion.value = agencia.id;
+            opcion.textContent = agencia.nombre;
+
+            selectAgencia.appendChild(
+                opcion
+            );
+        });
+
+        selectAgencia.disabled = false;
+
+    } catch (error) {
+        selectAgencia.innerHTML = `
+            <option value="">
+                Error al cargar agencias
+            </option>
+        `;
+
+        selectAgencia.disabled = true;
+
+        mostrarMensaje(
+            mensajeEntrega,
+            error.message,
+            "error"
+        );
+    }
+}
+
+
+/* =========================================================
+   UBICACIÓN GPS DEL FLETERO
+========================================================= */
 
 function guardarUbicacion(
     latitud,
@@ -210,226 +772,6 @@ function ubicacionDisponible() {
         && ubicacionActual.longitud
     );
 }
-
-
-function reiniciarListadoAgencias() {
-    selectAgencia.disabled = true;
-
-    selectAgencia.innerHTML = `
-        <option value="">
-            Cargando agencias...
-        </option>
-    `;
-
-    estadoAgencias.textContent = "";
-}
-
-
-async function iniciarSesion(
-    usuario,
-    password
-) {
-    const datosLogin = new URLSearchParams();
-
-    datosLogin.append(
-        "username",
-        usuario
-    );
-
-    datosLogin.append(
-        "password",
-        password
-    );
-
-    const respuesta = await fetch(
-        `${API_URL}/auth/login`,
-        {
-            method: "POST",
-            headers: {
-                "Content-Type":
-                    "application/x-www-form-urlencoded",
-            },
-            body: datosLogin,
-        }
-    );
-
-    const datos = await respuesta.json();
-
-    if (!respuesta.ok) {
-        throw new Error(
-            datos.detail
-            || "No fue posible iniciar sesión."
-        );
-    }
-
-    if (!datos.access_token) {
-        throw new Error(
-            "El servidor no devolvió "
-            + "el token de acceso."
-        );
-    }
-
-    return datos.access_token;
-}
-
-
-async function cargarAgenciasActivas() {
-    const token = obtenerToken();
-
-    reiniciarListadoAgencias();
-
-    if (!token) {
-        selectAgencia.innerHTML = `
-            <option value="">
-                Sesión no disponible
-            </option>
-        `;
-
-        estadoAgencias.textContent = "";
-
-        return;
-    }
-
-    try {
-        const respuesta = await fetch(
-            `${API_URL}/agencias/activas`,
-            {
-                method: "GET",
-                headers: {
-                    Authorization:
-                        `Bearer ${token}`,
-                },
-            }
-        );
-
-        const datos = await respuesta.json();
-
-        if (!respuesta.ok) {
-            if (
-                respuesta.status === 401
-                || respuesta.status === 403
-            ) {
-                eliminarToken();
-
-                mostrarFormularioLogin();
-
-                mostrarMensaje(
-                    mensajeLogin,
-                    "La sesión ha finalizado. "
-                    + "Inicia sesión nuevamente.",
-                    "error"
-                );
-
-                return;
-            }
-
-            throw new Error(
-                datos.detail
-                || "No fue posible cargar las agencias."
-            );
-        }
-
-        const agencias = Array.isArray(datos)
-            ? datos
-            : [];
-
-        selectAgencia.innerHTML = `
-            <option value="">
-                Seleccione una agencia
-            </option>
-        `;
-
-        if (agencias.length === 0) {
-            selectAgencia.innerHTML = `
-                <option value="">
-                    No hay agencias activas
-                </option>
-            `;
-
-            selectAgencia.disabled = true;
-
-            estadoAgencias.textContent = "";
-
-            return;
-        }
-
-        agencias.forEach((agencia) => {
-            const opcion = document.createElement(
-                "option"
-            );
-
-            opcion.value = agencia.id;
-            opcion.textContent = agencia.nombre;
-
-            selectAgencia.appendChild(
-                opcion
-            );
-        });
-
-        selectAgencia.disabled = false;
-
-        estadoAgencias.textContent = "";
-
-    } catch (error) {
-        selectAgencia.innerHTML = `
-            <option value="">
-                Error al cargar agencias
-            </option>
-        `;
-
-        selectAgencia.disabled = true;
-
-        estadoAgencias.textContent = "";
-
-        mostrarMensaje(
-            mensajeEntrega,
-            error.message,
-            "error"
-        );
-    }
-}
-
-
-formLogin.addEventListener(
-    "submit",
-    async (evento) => {
-        evento.preventDefault();
-
-        ocultarMensaje(
-            mensajeLogin
-        );
-
-        const usuario = document.getElementById(
-            "usuario"
-        ).value.trim();
-
-        const password = document.getElementById(
-            "password"
-        ).value;
-
-        try {
-            const token = await iniciarSesion(
-                usuario,
-                password
-            );
-
-            guardarToken(token);
-
-            formLogin.reset();
-
-            mostrarFormularioEntrega();
-
-            await cargarAgenciasActivas();
-
-        } catch (error) {
-            mostrarMensaje(
-                mensajeLogin,
-                error.message,
-                "error"
-            );
-        }
-    }
-);
 
 
 function mensajeErrorUbicacion(error) {
@@ -530,6 +872,10 @@ botonObtenerUbicacion.addEventListener(
 );
 
 
+/* =========================================================
+   REGISTRO DE ENTREGA DEL FLETERO
+========================================================= */
+
 formEntrega.addEventListener(
     "submit",
     async (evento) => {
@@ -542,12 +888,26 @@ formEntrega.addEventListener(
         const token = obtenerToken();
 
         if (!token) {
-            mostrarFormularioLogin();
+            cerrarSesion();
 
             mostrarMensaje(
                 mensajeLogin,
                 "La sesión ha finalizado. "
                 + "Inicia sesión nuevamente.",
+                "error"
+            );
+
+            return;
+        }
+
+        if (
+            !usuarioActual
+            || usuarioActual.rol !== ROL_FLETERO
+        ) {
+            mostrarMensaje(
+                mensajeEntrega,
+                "Solo los fleteros pueden "
+                + "registrar entregas.",
                 "error"
             );
 
@@ -631,19 +991,11 @@ formEntrega.addEventListener(
                     respuesta.status === 401
                     || respuesta.status === 403
                 ) {
-                    eliminarToken();
-                    eliminarUbicacion();
-
-                    mostrarFormularioLogin();
-
-                    mostrarMensaje(
-                        mensajeLogin,
-                        "La sesión ha finalizado. "
-                        + "Inicia sesión nuevamente.",
-                        "error"
+                    throw new Error(
+                        datos.detail
+                        || "No tiene permisos "
+                        + "para registrar la entrega."
                     );
-
-                    return;
                 }
 
                 throw new Error(
@@ -688,41 +1040,538 @@ formEntrega.addEventListener(
 );
 
 
-botonCerrarSesion.addEventListener(
-    "click",
-    () => {
-        eliminarToken();
+/* =========================================================
+   CATÁLOGOS DEL ADMINISTRADOR
+========================================================= */
 
-        formEntrega.reset();
+async function cargarAgenciasAdministrador() {
+    filtroAgencia.disabled = true;
 
-        eliminarUbicacion();
+    filtroAgencia.innerHTML = `
+        <option value="">
+            Cargando agencias...
+        </option>
+    `;
 
-        botonRegistrar.disabled = false;
-        botonObtenerUbicacion.disabled = false;
+    const agencias = await obtenerAgenciasActivas();
 
-        selectAgencia.disabled = true;
+    filtroAgencia.innerHTML = `
+        <option value="">
+            Todas
+        </option>
+    `;
 
-        selectAgencia.innerHTML = `
-            <option value="">
-                Cargando agencias...
-            </option>
-        `;
-
-        estadoAgencias.textContent = "";
-
-        ocultarMensaje(
-            mensajeEntrega
+    agencias.forEach((agencia) => {
+        const opcion = document.createElement(
+            "option"
         );
 
-        mostrarFormularioLogin();
+        opcion.value = agencia.id;
+        opcion.textContent = agencia.nombre;
+
+        filtroAgencia.appendChild(
+            opcion
+        );
+    });
+
+    filtroAgencia.disabled = false;
+}
+
+
+async function cargarFleterosAdministrador() {
+    filtroFletero.disabled = true;
+
+    filtroFletero.innerHTML = `
+        <option value="">
+            Cargando fleteros...
+        </option>
+    `;
+
+    const token = obtenerToken();
+
+    const respuesta = await fetch(
+        `${API_URL}/admin/usuarios/fleteros`,
+        {
+            method: "GET",
+            headers: {
+                Authorization:
+                    `Bearer ${token}`,
+            },
+        }
+    );
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok) {
+        throw new Error(
+            datos.detail
+            || "No fue posible cargar los fleteros."
+        );
+    }
+
+    const fleteros = Array.isArray(datos)
+        ? datos
+        : [];
+
+    filtroFletero.innerHTML = `
+        <option value="">
+            Todos
+        </option>
+    `;
+
+    fleteros.forEach((fletero) => {
+        const opcion = document.createElement(
+            "option"
+        );
+
+        opcion.value = fletero.id;
+        opcion.textContent = fletero.nombre;
+
+        filtroFletero.appendChild(
+            opcion
+        );
+    });
+
+    filtroFletero.disabled = false;
+}
+
+
+/* =========================================================
+   CONSULTA DE ENTREGAS DEL ADMINISTRADOR
+========================================================= */
+
+function formatearFechaHora(fechaTexto) {
+    const fecha = new Date(
+        fechaTexto
+    );
+
+    if (Number.isNaN(fecha.getTime())) {
+        return fechaTexto;
+    }
+
+    return new Intl.DateTimeFormat(
+        "es-GT",
+        {
+            dateStyle: "short",
+            timeStyle: "short",
+        }
+    ).format(fecha);
+}
+
+
+function formatearCoordenada(valor) {
+    if (
+        valor === null
+        || valor === undefined
+        || valor === ""
+    ) {
+        return "—";
+    }
+
+    const numero = Number(valor);
+
+    if (!Number.isFinite(numero)) {
+        return String(valor);
+    }
+
+    return numero.toFixed(6);
+}
+
+
+function crearCelda(texto, clase = "") {
+    const celda = document.createElement(
+        "td"
+    );
+
+    celda.textContent = texto;
+
+    if (clase) {
+        celda.classList.add(
+            clase
+        );
+    }
+
+    return celda;
+}
+
+
+function crearEnlaceTabla(
+    texto,
+    url
+) {
+    const enlace = document.createElement(
+        "a"
+    );
+
+    enlace.className = "enlace-tabla";
+    enlace.textContent = texto;
+    enlace.href = url;
+    enlace.target = "_blank";
+    enlace.rel = "noopener noreferrer";
+
+    return enlace;
+}
+
+
+function mostrarTablaVacia(mensaje) {
+    cuerpoTablaEntregas.innerHTML = `
+        <tr>
+            <td
+                colspan="8"
+                class="tabla-vacia"
+            >
+                ${mensaje}
+            </td>
+        </tr>
+    `;
+}
+
+
+function renderizarEntregas(entregas) {
+    cuerpoTablaEntregas.innerHTML = "";
+
+    totalEntregas.textContent = String(
+        entregas.length
+    );
+
+    botonExportar.disabled = true;
+
+    if (entregas.length === 0) {
+        mostrarTablaVacia(
+            "No se encontraron entregas."
+        );
+
+        return;
+    }
+
+    entregas.forEach((entrega) => {
+        const fila = document.createElement(
+            "tr"
+        );
+
+        fila.appendChild(
+            crearCelda(
+                formatearFechaHora(
+                    entrega.fecha_envio
+                )
+            )
+        );
+
+        fila.appendChild(
+            crearCelda(
+                String(entrega.envio)
+            )
+        );
+
+        fila.appendChild(
+            crearCelda(
+                entrega.agencia?.nombre || "—"
+            )
+        );
+
+        fila.appendChild(
+            crearCelda(
+                entrega.usuario?.nombre || "—"
+            )
+        );
+
+        fila.appendChild(
+            crearCelda(
+                formatearCoordenada(
+                    entrega.latitud
+                ),
+                "coordenada"
+            )
+        );
+
+        fila.appendChild(
+            crearCelda(
+                formatearCoordenada(
+                    entrega.longitud
+                ),
+                "coordenada"
+            )
+        );
+
+        const celdaFoto = document.createElement(
+            "td"
+        );
+
+        if (entrega.foto_envio) {
+            celdaFoto.appendChild(
+                crearEnlaceTabla(
+                    "Ver",
+                    entrega.foto_envio
+                )
+            );
+        } else {
+            celdaFoto.textContent = "—";
+        }
+
+        fila.appendChild(
+            celdaFoto
+        );
+
+        const celdaMapa = document.createElement(
+            "td"
+        );
+
+        if (
+            entrega.latitud !== null
+            && entrega.longitud !== null
+        ) {
+            const urlMapa = (
+                "https://www.google.com/maps"
+                + `/search/?api=1&query=${
+                    encodeURIComponent(
+                        `${entrega.latitud},${entrega.longitud}`
+                    )
+                }`
+            );
+
+            celdaMapa.appendChild(
+                crearEnlaceTabla(
+                    "Abrir",
+                    urlMapa
+                )
+            );
+        } else {
+            celdaMapa.textContent = "—";
+        }
+
+        fila.appendChild(
+            celdaMapa
+        );
+
+        cuerpoTablaEntregas.appendChild(
+            fila
+        );
+    });
+}
+
+
+function construirParametrosConsulta() {
+    const parametros = new URLSearchParams();
+
+    if (filtroFechaInicio.value) {
+        parametros.set(
+            "fecha_inicio",
+            filtroFechaInicio.value
+        );
+    }
+
+    if (filtroFechaFin.value) {
+        parametros.set(
+            "fecha_fin",
+            filtroFechaFin.value
+        );
+    }
+
+    if (filtroAgencia.value) {
+        parametros.set(
+            "agencia_id",
+            filtroAgencia.value
+        );
+    }
+
+    if (filtroFletero.value) {
+        parametros.set(
+            "usuario_id",
+            filtroFletero.value
+        );
+    }
+
+    return parametros;
+}
+
+
+async function consultarEntregasAdministrador() {
+    if (consultaAdministradorEnProceso) {
+        return;
+    }
+
+    if (
+        filtroFechaInicio.value
+        && filtroFechaFin.value
+        && filtroFechaFin.value
+            < filtroFechaInicio.value
+    ) {
+        mostrarMensaje(
+            mensajeAdministrador,
+            "La fecha final no puede ser menor "
+            + "que la fecha inicial.",
+            "error"
+        );
+
+        return;
+    }
+
+    consultaAdministradorEnProceso = true;
+
+    ocultarMensaje(
+        mensajeAdministrador
+    );
+
+    mostrarTablaVacia(
+        "Consultando entregas..."
+    );
+
+    totalEntregas.textContent = "0";
+
+    try {
+        const token = obtenerToken();
+
+        const parametros = construirParametrosConsulta();
+
+        const url = parametros.toString()
+            ? `${API_URL}/entregas?${parametros.toString()}`
+            : `${API_URL}/entregas`;
+
+        const respuesta = await fetch(
+            url,
+            {
+                method: "GET",
+                headers: {
+                    Authorization:
+                        `Bearer ${token}`,
+                },
+            }
+        );
+
+        const datos = await respuesta.json();
+
+        if (!respuesta.ok) {
+            throw new Error(
+                datos.detail
+                || "No fue posible consultar "
+                + "las entregas."
+            );
+        }
+
+        const entregas = Array.isArray(datos)
+            ? datos
+            : [];
+
+        renderizarEntregas(
+            entregas
+        );
+
+    } catch (error) {
+        totalEntregas.textContent = "0";
+
+        mostrarTablaVacia(
+            "No fue posible cargar las entregas."
+        );
+
+        mostrarMensaje(
+            mensajeAdministrador,
+            error.message,
+            "error"
+        );
+
+    } finally {
+        consultaAdministradorEnProceso = false;
+    }
+}
+
+
+/* =========================================================
+   FILTROS AUTOMÁTICOS
+========================================================= */
+
+[
+    filtroFechaInicio,
+    filtroFechaFin,
+    filtroAgencia,
+    filtroFletero,
+].forEach((control) => {
+    control.addEventListener(
+        "change",
+        consultarEntregasAdministrador
+    );
+});
+
+
+formFiltros.addEventListener(
+    "submit",
+    (evento) => {
+        evento.preventDefault();
     }
 );
 
 
-if (obtenerToken()) {
-    mostrarFormularioEntrega();
+/* =========================================================
+   INICIALIZACIÓN DEL PANEL ADMINISTRATIVO
+========================================================= */
 
-    cargarAgenciasActivas();
-} else {
-    mostrarFormularioLogin();
+async function inicializarPanelAdministrador() {
+    ocultarMensaje(
+        mensajeAdministrador
+    );
+
+    mostrarTablaVacia(
+        "Preparando panel administrativo..."
+    );
+
+    try {
+        await Promise.all([
+            cargarAgenciasAdministrador(),
+            cargarFleterosAdministrador(),
+        ]);
+
+        await consultarEntregasAdministrador();
+
+    } catch (error) {
+        mostrarTablaVacia(
+            "No fue posible preparar el panel."
+        );
+
+        mostrarMensaje(
+            mensajeAdministrador,
+            error.message,
+            "error"
+        );
+    }
 }
+
+
+/* =========================================================
+   RESTAURAR SESIÓN AL RECARGAR
+========================================================= */
+
+async function restaurarSesion() {
+    const token = obtenerToken();
+
+    if (!token) {
+        mostrarFormularioLogin();
+
+        return;
+    }
+
+    try {
+        let usuario = obtenerUsuarioGuardado();
+
+        if (!usuario) {
+            usuario = await consultarUsuarioActual();
+        }
+
+        await prepararInterfazPorRol(
+            usuario
+        );
+
+    } catch {
+        limpiarSesion();
+
+        mostrarFormularioLogin();
+
+        mostrarMensaje(
+            mensajeLogin,
+            "La sesión ha finalizado. "
+            + "Inicia sesión nuevamente.",
+            "error"
+        );
+    }
+}
+
+
+restaurarSesion();

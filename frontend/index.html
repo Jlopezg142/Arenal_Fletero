@@ -21,7 +21,9 @@
         <header class="encabezado">
             <div class="titulo-aplicacion">
                 <h1>Arenal Fletero</h1>
-                <p>Registro de entregas</p>
+                <p id="subtitulo-aplicacion">
+                    Registro de entregas
+                </p>
             </div>
 
             <img
@@ -73,6 +75,7 @@
 
                 <button
                     type="submit"
+                    id="boton-login"
                     class="boton boton-principal"
                 >
                     Ingresar
@@ -85,7 +88,7 @@
             ></div>
         </section>
 
-        <!-- Registro de entrega -->
+        <!-- Perfil fletero -->
         <section
             id="seccion-entrega"
             class="tarjeta oculto"
@@ -94,7 +97,10 @@
                 <div>
                     <h2>Nueva entrega</h2>
 
-                    <p class="texto-secundario">
+                    <p
+                        id="bienvenida-fletero"
+                        class="texto-secundario"
+                    >
                         Registra la evidencia del envío.
                     </p>
                 </div>
@@ -221,12 +227,150 @@
                 class="mensaje oculto"
             ></div>
         </section>
+
+        <!-- Perfil administrador -->
+        <section
+            id="seccion-administrador"
+            class="tarjeta tarjeta-administrador oculto"
+        >
+            <div class="encabezado-seccion">
+                <div>
+                    <h2>Panel de administración</h2>
+
+                    <p
+                        id="bienvenida-administrador"
+                        class="texto-secundario"
+                    >
+                        Consulta y filtra las entregas registradas.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    id="boton-cerrar-sesion-admin"
+                    class="boton boton-secundario"
+                >
+                    Salir
+                </button>
+            </div>
+
+            <form
+                id="form-filtros"
+                class="contenedor-filtros"
+            >
+                <div class="grupo-campo">
+                    <label for="filtro-fecha-inicio">
+                        Fecha inicial
+                    </label>
+
+                    <input
+                        type="date"
+                        id="filtro-fecha-inicio"
+                        name="fecha_inicio"
+                    >
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="filtro-fecha-fin">
+                        Fecha final
+                    </label>
+
+                    <input
+                        type="date"
+                        id="filtro-fecha-fin"
+                        name="fecha_fin"
+                    >
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="filtro-agencia">
+                        Agencia
+                    </label>
+
+                    <select
+                        id="filtro-agencia"
+                        name="agencia_id"
+                        disabled
+                    >
+                        <option value="">
+                            Todas
+                        </option>
+                    </select>
+                </div>
+
+                <div class="grupo-campo">
+                    <label for="filtro-fletero">
+                        Fletero
+                    </label>
+
+                    <select
+                        id="filtro-fletero"
+                        name="usuario_id"
+                        disabled
+                    >
+                        <option value="">
+                            Todos
+                        </option>
+                    </select>
+                </div>
+            </form>
+
+            <div
+                id="mensaje-administrador"
+                class="mensaje oculto"
+            ></div>
+
+            <div class="resumen-resultados">
+                <strong>Entregas encontradas:</strong>
+
+                <span id="total-entregas">
+                    0
+                </span>
+            </div>
+
+            <div class="contenedor-tabla">
+                <table id="tabla-entregas">
+                    <thead>
+                        <tr>
+                            <th>Fecha y hora</th>
+                            <th>Envío</th>
+                            <th>Agencia</th>
+                            <th>Fletero</th>
+                            <th>Latitud</th>
+                            <th>Longitud</th>
+                            <th>Foto</th>
+                            <th>Mapa</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="cuerpo-tabla-entregas">
+                        <tr>
+                            <td
+                                colspan="8"
+                                class="tabla-vacia"
+                            >
+                                Cargando entregas...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <button
+                type="button"
+                id="boton-exportar"
+                class="boton boton-exportar"
+                disabled
+            >
+                Exportar CSV
+            </button>
+        </section>
     </main>
 
     <footer class="pie-pagina">
         <span>Jl-A</span>
     </footer>
 
-    <script src="./js/app.js?v=1.2.1"></script>
+    <script src="./js/app.js?v=1.3.0"></script>
 </body>
 </html>

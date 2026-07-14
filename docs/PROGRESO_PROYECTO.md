@@ -340,3 +340,36 @@ Fecha: 14/07/2026
 - Correcciones generales del frontend.
 
 Estado del proyecto: Frontend funcional para registro de entregas.
+
+# Versión 1.2 – Panel administrativo de consulta
+
+## Funcionalidades implementadas
+
+- Separación de interfaz por rol.
+- Perfil FLETERO exclusivamente operativo.
+- Perfil ADMIN exclusivamente administrativo.
+- Restricción del endpoint POST /entregas para administradores.
+- Panel administrativo de consulta de entregas.
+- Filtros automáticos por:
+  - fecha inicial;
+  - fecha final;
+  - agencia;
+  - fletero.
+- Opciones Todas y Todos en los filtros.
+- Tabla con:
+  - fecha y hora;
+  - número de envío;
+  - agencia;
+  - fletero;
+  - latitud;
+  - longitud;
+  - fotografía;
+  - enlace a Google Maps.
+- Coordenadas mostradas con seis decimales.
+- Catálogo de fleteros activos para filtros.
+- Pruebas satisfactorias de permisos, filtros, fotografías y mapas.
+
+## Estado
+
+Versión estable.
+Cierre funcional de Arenal Fletero v1.

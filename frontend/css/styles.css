@@ -15,6 +15,7 @@
     --borde: #d7e0e8;
     --error: #b91c1c;
     --exito: #166534;
+    --fondo-tabla: #f8fafc;
 
     color: var(--texto);
     background: var(--fondo);
@@ -38,17 +39,18 @@ body {
 
 button,
 input,
-textarea {
+textarea,
+select {
     font: inherit;
 }
 
 .contenedor-principal {
-    width: min(100% - 32px, 620px);
+    width: min(100% - 32px, 1180px);
     margin: 0 auto;
     padding: 30px 0 18px;
 }
 
-/* Encabezado */
+/* Encabezado principal */
 
 .encabezado {
     display: flex;
@@ -94,6 +96,8 @@ textarea {
 /* Tarjetas */
 
 .tarjeta {
+    width: min(100%, 620px);
+    margin: 0 auto;
     padding: 26px;
     border: 1px solid var(--borde);
     border-top: 6px solid var(--amarillo);
@@ -101,6 +105,10 @@ textarea {
     background: rgba(255, 255, 255, 0.98);
     box-shadow:
         0 18px 45px rgba(6, 54, 107, 0.13);
+}
+
+.tarjeta-administrador {
+    width: 100%;
 }
 
 .tarjeta h2,
@@ -137,11 +145,17 @@ textarea {
 .grupo-campo textarea,
 .grupo-campo select {
     width: 100%;
+    min-height: 48px;
     padding: 13px 14px;
     border: 1px solid #b9c8d5;
     border-radius: 10px;
     background: var(--blanco);
     color: var(--texto);
+}
+
+.grupo-campo textarea {
+    min-height: 110px;
+    resize: vertical;
 }
 
 .grupo-campo input:focus,
@@ -226,6 +240,18 @@ textarea {
     background: var(--amarillo-oscuro);
 }
 
+.boton-exportar {
+    display: block;
+    min-width: 180px;
+    margin: 22px 0 0 auto;
+    background: var(--amarillo);
+    color: var(--azul-oscuro);
+}
+
+.boton-exportar:hover:not(:disabled) {
+    background: var(--amarillo-oscuro);
+}
+
 /* Mensajes */
 
 .mensaje {
@@ -247,10 +273,114 @@ textarea {
     color: var(--error);
 }
 
-/* Marca personal discreta */
+/* Panel del administrador */
+
+.contenedor-filtros {
+    display: grid;
+    grid-template-columns:
+        repeat(4, minmax(180px, 1fr));
+    gap: 16px;
+    margin-top: 6px;
+    padding: 18px;
+    border: 1px solid #cbd8e4;
+    border-radius: 14px;
+    background: #f6f9fc;
+}
+
+.contenedor-filtros .grupo-campo {
+    margin-bottom: 0;
+}
+
+.resumen-resultados {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+    margin: 22px 0 10px;
+    color: var(--azul-oscuro);
+}
+
+.contenedor-tabla {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    background: var(--blanco);
+}
+
+#tabla-entregas {
+    width: 100%;
+    min-width: 1040px;
+    border-collapse: collapse;
+}
+
+#tabla-entregas th,
+#tabla-entregas td {
+    padding: 12px 11px;
+    border-bottom: 1px solid #e3e9ef;
+    text-align: left;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+#tabla-entregas th {
+    position: sticky;
+    top: 0;
+    background: var(--azul-oscuro);
+    color: var(--blanco);
+    font-size: 14px;
+}
+
+#tabla-entregas tbody tr:nth-child(even) {
+    background: var(--fondo-tabla);
+}
+
+#tabla-entregas tbody tr:hover {
+    background: #edf5fc;
+}
+
+#tabla-entregas td {
+    color: #263548;
+    font-size: 14px;
+}
+
+.tabla-vacia {
+    padding: 28px !important;
+    color: var(--texto-secundario) !important;
+    text-align: center !important;
+}
+
+.enlace-tabla {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 7px 11px;
+    border: 1px solid #b9c8d5;
+    border-radius: 8px;
+    background: var(--blanco);
+    color: var(--azul-principal);
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.enlace-tabla:hover {
+    border-color: var(--azul-principal);
+    background: #edf5fc;
+}
+
+.coordenada {
+    font-family:
+        Consolas,
+        "Courier New",
+        monospace;
+    font-size: 13px;
+}
+
+/* Marca personal */
 
 .pie-pagina {
-    width: min(100% - 32px, 620px);
+    width: min(100% - 32px, 1180px);
     margin: 0 auto;
     padding: 3px 8px 18px;
     text-align: left;
@@ -269,11 +399,20 @@ textarea {
     display: none;
 }
 
+/* Tabletas */
+
+@media (max-width: 920px) {
+    .contenedor-filtros {
+        grid-template-columns:
+            repeat(2, minmax(180px, 1fr));
+    }
+}
+
 /* Celulares */
 
 @media (max-width: 520px) {
     .contenedor-principal {
-        width: min(100% - 20px, 620px);
+        width: min(100% - 20px, 1180px);
         padding: 16px 0 12px;
     }
 
@@ -312,7 +451,21 @@ textarea {
         width: 100%;
     }
 
+    .contenedor-filtros {
+        grid-template-columns: 1fr;
+        padding: 14px;
+    }
+
+    .resumen-resultados {
+        justify-content: flex-start;
+    }
+
+    .boton-exportar {
+        width: 100%;
+        margin-left: 0;
+    }
+
     .pie-pagina {
-        width: min(100% - 20px, 620px);
+        width: min(100% - 20px, 1180px);
     }
 }
