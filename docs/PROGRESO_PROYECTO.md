@@ -468,3 +468,25 @@ Versión estable.
 
 Lista para iniciar la versión 2.3:
 Administración visual de agencias.
+
+# Versión 2.3 – Administración completa de agencias
+
+Fecha: 15/07/2026
+
+## Funcionalidades incorporadas
+
+- Administración completa de agencias.
+- Crear agencias.
+- Editar agencias.
+- Activar agencias.
+- Desactivar agencias.
+- Validación de nombres duplicados.
+- Longitud máxima de 50 caracteres.
+- Actualización automática de la tabla.
+- Actualización automática del catálogo de agencias.
+- Solo agencias activas disponibles para el fletero.
+- Mejoras visuales del panel administrativo.
+- Correcciones generales de estabilidad.
+
+Estado:
+Versión estable.

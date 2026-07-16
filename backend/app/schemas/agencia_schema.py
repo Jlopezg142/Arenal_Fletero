@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field, field_validator
 class AgenciaCrearRequest(BaseModel):
     nombre: str = Field(
         min_length=2,
-        max_length=100
+        max_length=50
     )
 
     @field_validator("nombre")
@@ -24,7 +24,7 @@ class AgenciaCrearRequest(BaseModel):
 class AgenciaActualizarRequest(BaseModel):
     nombre: str = Field(
         min_length=2,
-        max_length=100
+        max_length=50
     )
 
     @field_validator("nombre")

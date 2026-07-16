@@ -469,3 +469,233 @@ select {
         width: min(100% - 20px, 1180px);
     }
 }
+/* =========================================================
+   MODAL DE AGENCIAS
+========================================================= */
+
+.modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(0, 0, 0, 0.45);
+
+    backdrop-filter: blur(2px);
+}
+
+.modal-contenido {
+    width: 100%;
+    max-width: 520px;
+
+    background: var(--blanco);
+
+    border-radius: 18px;
+
+    border-top: 6px solid var(--amarillo);
+
+    padding: 24px;
+
+    box-shadow:
+        0 18px 45px rgba(6, 54, 107, 0.25);
+
+    animation: aparecerModal .18s ease-out;
+}
+
+.modal-encabezado {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 18px;
+}
+
+.modal-encabezado h3 {
+    margin: 0;
+    color: var(--azul-oscuro);
+}
+
+.boton-cerrar-modal {
+    width: 38px;
+    height: 38px;
+
+    border: none;
+    border-radius: 50%;
+
+    background: transparent;
+
+    color: var(--texto-secundario);
+
+    font-size: 26px;
+
+    cursor: pointer;
+
+    transition: .15s;
+}
+
+.boton-cerrar-modal:hover {
+    background: #edf2f7;
+    color: var(--azul-principal);
+}
+
+.modal-botones {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+
+    margin-top: 24px;
+}
+
+.modal-botones .boton-principal {
+    width: auto;
+    min-width: 130px;
+}
+
+.modal-botones .boton-secundario {
+    width: auto;
+    min-width: 120px;
+}
+
+.estado-activo {
+    display: inline-block;
+
+    padding: 4px 10px;
+
+    border-radius: 999px;
+
+    background: #eaf8f0;
+
+    color: var(--exito);
+
+    font-weight: 700;
+
+    font-size: 13px;
+}
+
+.estado-inactivo {
+    display: inline-block;
+
+    padding: 4px 10px;
+
+    border-radius: 999px;
+
+    background: #fff0f0;
+
+    color: var(--error);
+
+    font-weight: 700;
+
+    font-size: 13px;
+}
+
+.acciones-tabla {
+    display: flex;
+    gap: 8px;
+}
+
+.acciones-tabla .boton {
+    min-height: 34px;
+
+    padding: 6px 12px;
+
+    font-size: 13px;
+}
+
+@keyframes aparecerModal {
+
+    from {
+
+        opacity: 0;
+
+        transform:
+            translateY(-15px)
+            scale(.97);
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform:
+            translateY(0)
+            scale(1);
+    }
+
+}
+
+@media (max-width:520px){
+
+    .modal-contenido{
+
+        padding:20px;
+
+    }
+
+    .modal-botones{
+
+        flex-direction:column;
+
+    }
+
+    .modal-botones .boton{
+
+        width:100%;
+
+    }
+
+}
+
+/* El modal debe permanecer oculto hasta que JavaScript lo abra */
+.modal.oculto {
+    display: none;
+}
+
+/* =========================================================
+   ALINEACION DEL LOGO Y MARCA
+========================================================= */
+
+.encabezado {
+    position: relative;
+    width: min(100%, 820px);
+    margin: 0 auto 24px;
+}
+
+.titulo-aplicacion {
+    width: 100%;
+    padding: 0 130px;
+}
+
+.logo-empresa {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.pie-pagina {
+    width: min(100% - 32px, 620px);
+    padding-left: 8px;
+}
+
+@media (max-width: 520px) {
+    .encabezado {
+        width: 100%;
+    }
+
+    .titulo-aplicacion {
+        padding: 0 82px 0 0;
+    }
+
+    .logo-empresa {
+        right: 0;
+    }
+
+    .pie-pagina {
+        width: min(100% - 20px, 620px);
+    }
+}

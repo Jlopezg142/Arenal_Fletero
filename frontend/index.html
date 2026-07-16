@@ -276,6 +276,63 @@
                 </button>
             </div>
 
+            <!-- Administración visual de agencias -->
+            <section
+                id="seccion-gestion-agencias"
+                class="modulo-administrativo"
+            >
+                <div class="encabezado-seccion">
+                    <div>
+                        <h3>Administración de agencias</h3>
+
+                        <p class="texto-secundario">
+                            Crea, modifica, activa o desactiva
+                            las agencias del sistema.
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        id="boton-nueva-agencia"
+                        class="boton boton-principal"
+                    >
+                        Nueva agencia
+                    </button>
+                </div>
+
+                <div
+                    id="mensaje-agencias-admin"
+                    class="mensaje oculto"
+                ></div>
+
+                <div class="contenedor-tabla">
+                    <table id="tabla-agencias">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="cuerpo-tabla-agencias">
+                            <tr>
+                                <td
+                                    colspan="4"
+                                    class="tabla-vacia"
+                                >
+                                    La administración de agencias
+                                    estará disponible próximamente.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <hr>
+
             <form
                 id="form-filtros"
                 class="contenedor-filtros"
@@ -389,7 +446,65 @@
             </button>
         </section>
     </main>
+    <!-- Modal Nueva Agencia -->
+    <div
+        id="modal-agencia"
+        class="modal oculto"
+    >
+        <div class="modal-contenido">
 
+            <div class="modal-encabezado">
+                <h3 id="titulo-modal-agencia">
+                    Nueva agencia
+                </h3>
+
+                <button
+                    type="button"
+                    id="cerrar-modal-agencia"
+                    class="boton-cerrar-modal"
+                >
+                    X
+                </button>
+            </div>
+
+            <div class="grupo-campo">
+                <label for="nombre-agencia">
+                    Nombre de la agencia
+                </label>
+
+                <input
+                    type="text"
+                    id="nombre-agencia"
+                    maxlength="50"
+                    autocomplete="off"
+                >
+            </div>
+
+            <div
+                id="mensaje-modal-agencia"
+                class="mensaje oculto"
+            ></div>
+
+            <div class="modal-botones">
+                <button
+                    type="button"
+                    id="cancelar-modal-agencia"
+                    class="boton boton-secundario"
+                >
+                    Cancelar
+                </button>
+
+                <button
+                    type="button"
+                    id="guardar-agencia"
+                    class="boton boton-principal"
+                >
+                    Guardar
+                </button>
+            </div>
+
+        </div>
+    </div>
     <footer class="pie-pagina">
         <span>Jl-A</span>
     </footer>
