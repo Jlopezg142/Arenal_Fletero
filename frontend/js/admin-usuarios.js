@@ -3,6 +3,7 @@
 window.Arenal = window.Arenal || {};
 
 window.Arenal.crearModuloAdminUsuarios = (
+    
     dependencias
 ) => {
     const {
@@ -157,7 +158,6 @@ window.Arenal.crearModuloAdminUsuarios = (
         );
     }
 
-
     function limpiarModalUsuario() {
         inputNombreUsuarioAdmin.value = "";
         inputUsuarioAdmin.value = "";
@@ -251,6 +251,9 @@ window.Arenal.crearModuloAdminUsuarios = (
             "oculto"
         );
 
+        modoFormularioUsuario = "crear";
+        usuarioEditandoId = null;
+
         limpiarModalUsuario();
     }
 
@@ -313,6 +316,81 @@ window.Arenal.crearModuloAdminUsuarios = (
         limpiarModalPasswordUsuario();
     }
 
+    function inicializarEventos() {
+    botonNuevoUsuario.addEventListener(
+        "click",
+        () => {
+            abrirModalUsuario(
+                "crear"
+            );
+        }
+    );
+
+    botonCerrarModalUsuario.addEventListener(
+        "click",
+        cerrarModalUsuario
+    );
+
+    botonCancelarModalUsuario.addEventListener(
+        "click",
+        cerrarModalUsuario
+    );
+
+    modalUsuario.addEventListener(
+        "click",
+        (evento) => {
+            if (
+                evento.target === modalUsuario
+            ) {
+                cerrarModalUsuario();
+            }
+        }
+    );
+
+    botonCerrarModalPasswordUsuario.addEventListener(
+        "click",
+        cerrarModalPasswordUsuario
+    );
+
+    botonCancelarModalPasswordUsuario.addEventListener(
+        "click",
+        cerrarModalPasswordUsuario
+    );
+
+    modalPasswordUsuario.addEventListener(
+        "click",
+        (evento) => {
+            if (
+                evento.target === modalPasswordUsuario
+            ) {
+                cerrarModalPasswordUsuario();
+            }
+        }
+    );
+
+    document.addEventListener(
+        "keydown",
+        (evento) => {
+            if (
+                evento.key === "Escape"
+                && !modalUsuario.classList.contains(
+                    "oculto"
+                )
+            ) {
+                cerrarModalUsuario();
+            }
+
+            if (
+                evento.key === "Escape"
+                && !modalPasswordUsuario.classList.contains(
+                    "oculto"
+                )
+            ) {
+                cerrarModalPasswordUsuario();
+            }
+        }
+    );
+    }
 
     return {
         elementos: {
@@ -331,6 +409,7 @@ window.Arenal.crearModuloAdminUsuarios = (
             inputConfirmarPasswordUsuario,
         },
 
+        inicializarEventos,
         obtenerMensajeErrorUsuario,
         abrirModalUsuario,
         cerrarModalUsuario,

@@ -329,7 +329,6 @@ function guardarUsuario(usuario) {
     );
 }
 
-
 function limpiarSesion() {
     limpiarSesionEnStorage();
 
@@ -347,6 +346,7 @@ const moduloAdminUsuarios =
 
         ocultarMensaje,
     });
+    moduloAdminUsuarios.inicializarEventos();
 
 /* =========================================================
    NAVEGACIÓN SEGÚN ROL
