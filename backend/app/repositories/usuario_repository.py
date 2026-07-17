@@ -20,6 +20,23 @@ def buscar_por_usuario(
     return db.scalar(consulta)
 
 
+def buscar_por_usuario_excluyendo_id(
+    db: Session,
+    nombre_usuario: str,
+    usuario_id: int,
+) -> Usuario | None:
+    consulta = (
+        select(Usuario)
+        .where(
+            func.lower(Usuario.usuario)
+            == nombre_usuario.lower(),
+            Usuario.id != usuario_id,
+        )
+    )
+
+    return db.scalar(consulta)
+
+
 def buscar_por_id(
     db: Session,
     usuario_id: int,
@@ -29,6 +46,22 @@ def buscar_por_id(
     )
 
     return db.scalar(consulta)
+
+
+def listar_usuarios(
+    db: Session,
+) -> list[Usuario]:
+    consulta = (
+        select(Usuario)
+        .order_by(
+            Usuario.nombre.asc(),
+            Usuario.id.asc(),
+        )
+    )
+
+    return list(
+        db.scalars(consulta).all()
+    )
 
 
 def listar_fleteros_activos(
@@ -50,11 +83,39 @@ def listar_fleteros_activos(
     )
 
 
+def contar_administradores_activos(
+    db: Session,
+) -> int:
+    consulta = (
+        select(
+            func.count(Usuario.id)
+        )
+        .where(
+            Usuario.rol == Roles.ADMIN,
+            Usuario.activo.is_(True),
+        )
+    )
+
+    return int(
+        db.scalar(consulta) or 0
+    )
+
+
 def crear_usuario(
     db: Session,
     usuario: Usuario,
 ) -> Usuario:
     db.add(usuario)
+    db.commit()
+    db.refresh(usuario)
+
+    return usuario
+
+
+def actualizar_usuario(
+    db: Session,
+    usuario: Usuario,
+) -> Usuario:
     db.commit()
     db.refresh(usuario)
 

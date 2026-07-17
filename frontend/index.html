@@ -275,11 +275,43 @@
                     Salir
                 </button>
             </div>
+            <!-- Navegacion interna del administrador -->
+            <nav
+                id="navegacion-administrador"
+                class="navegacion-administrador"
+                aria-label="Modulos administrativos"
+            >
+                <button
+                    type="button"
+                    class="boton boton-modulo-admin activo"
+                    data-modulo-admin="entregas"
+                >
+                    Entregas
+                </button>
 
+                <button
+                    type="button"
+                    class="boton boton-modulo-admin"
+                    data-modulo-admin="agencias"
+                >
+                    Agencias
+                </button>
+
+                <button
+                    type="button"
+                    class="boton boton-modulo-admin"
+                    data-modulo-admin="usuarios"
+                >
+                    Usuarios
+                </button>
+            </nav>
+
+            
             <!-- Administración visual de agencias -->
             <section
-                id="seccion-gestion-agencias"
-                class="modulo-administrativo"
+                id="subvista-admin-agencias"
+                class="modulo-administrativo subvista-admin"
+                data-subvista-admin="agencias"
             >
                 <div class="encabezado-seccion">
                     <div>
@@ -330,8 +362,79 @@
                     </table>
                 </div>
             </section>
+            <!-- Administracion visual de usuarios -->
+            <section
+                id="subvista-admin-usuarios"
+                class="modulo-administrativo subvista-admin"
+                data-subvista-admin="usuarios"
+            >
+                <div class="encabezado-seccion">
+                    <div>
+                        <h3>Administracion de usuarios</h3>
 
+                        <p class="texto-secundario">
+                            Crea, modifica, activa o desactiva
+                            los usuarios del sistema.
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        id="boton-nuevo-usuario"
+                        class="boton boton-principal"
+                    >
+                        Nuevo usuario
+                    </button>
+                </div>
+
+                <div
+                    id="mensaje-usuarios-admin"
+                    class="mensaje oculto"
+                ></div>
+
+                <div class="contenedor-tabla">
+                    <table id="tabla-usuarios">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Usuario</th>
+                                <th>Rol</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="cuerpo-tabla-usuarios">
+                            <tr>
+                                <td
+                                    colspan="6"
+                                    class="tabla-vacia"
+                                >
+                                    La administracion visual de usuarios
+                                    se habilitara proximamente.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+          
             <hr>
+
+            <!-- Consulta y exportacion de entregas -->
+            <section
+                id="subvista-admin-entregas"
+                class="subvista-admin"
+                data-subvista-admin="entregas"
+            >
+                <div>
+                    <h3>Consulta de entregas</h3>
+
+                    <p class="texto-secundario">
+                        Filtra, consulta y exporta las entregas registradas.
+                    </p>
+                </div>
 
             <form
                 id="form-filtros"
@@ -446,6 +549,118 @@
             </button>
         </section>
     </main>
+
+        <!-- Modal Nuevo Usuario -->
+    <div
+        id="modal-usuario"
+        class="modal oculto"
+    >
+        <div class="modal-contenido">
+
+            <div class="modal-encabezado">
+                <h3 id="titulo-modal-usuario">
+                    Nuevo usuario
+                </h3>
+
+                <button
+                    type="button"
+                    id="cerrar-modal-usuario"
+                    class="boton-cerrar-modal"
+                    aria-label="Cerrar"
+                >
+                    X
+                </button>
+            </div>
+
+            <div class="grupo-campo">
+                <label for="nombre-usuario-admin">
+                    Nombre completo
+                </label>
+
+                <input
+                    type="text"
+                    id="nombre-usuario-admin"
+                    maxlength="100"
+                    autocomplete="off"
+                >
+            </div>
+
+            <div class="grupo-campo">
+                <label for="usuario-admin">
+                    Usuario
+                </label>
+
+                <input
+                    type="text"
+                    id="usuario-admin"
+                    maxlength="50"
+                    autocomplete="off"
+                >
+            </div>
+
+            <div
+                id="grupo-password-usuario"
+                class="grupo-campo"
+            >
+                <label for="password-usuario-admin">
+                    Contraseña
+                </label>
+
+                <input
+                    type="password"
+                    id="password-usuario-admin"
+                    minlength="8"
+                    maxlength="128"
+                    autocomplete="new-password"
+                >
+
+                <small class="texto-ayuda">
+                    Debe contener al menos 8 caracteres.
+                </small>
+            </div>
+
+            <div class="grupo-campo">
+                <label for="rol-usuario-admin">
+                    Rol
+                </label>
+
+                <select id="rol-usuario-admin">
+                    <option value="FLETERO">
+                        Fletero
+                    </option>
+
+                    <option value="ADMIN">
+                        Administrador
+                    </option>
+                </select>
+            </div>
+
+            <div
+                id="mensaje-modal-usuario"
+                class="mensaje oculto"
+            ></div>
+
+            <div class="modal-botones">
+                <button
+                    type="button"
+                    id="cancelar-modal-usuario"
+                    class="boton boton-secundario"
+                >
+                    Cancelar
+                </button>
+
+                <button
+                    type="button"
+                    id="guardar-usuario"
+                    class="boton boton-principal"
+                >
+                    Guardar
+                </button>
+            </div>
+
+        </div>
+    </div>
+
     <!-- Modal Nueva Agencia -->
     <div
         id="modal-agencia"
@@ -509,6 +724,6 @@
         <span>Jl-A</span>
     </footer>
 
-    <script src="./js/app.js?v=2.1.0"></script>
+    <script src="./js/app.js?v=2.4.7"></script>
 </body>
 </html>

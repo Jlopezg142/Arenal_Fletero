@@ -10,7 +10,8 @@ let usuarioActual = null;
 let consultaAdministradorEnProceso = false;
 let modoFormularioAgencia = "crear";
 let agenciaEditandoId = null;
-
+let modoFormularioUsuario = "crear";
+let usuarioEditandoId = null;
 
 /* =========================================================
    ELEMENTOS GENERALES
@@ -188,6 +189,76 @@ const cuerpoTablaAgencias = document.getElementById(
 const tituloModalAgencia = document.getElementById(
     "titulo-modal-agencia"
 );
+
+const botonNuevoUsuario = document.getElementById(
+    "boton-nuevo-usuario"
+);
+
+const mensajeUsuariosAdmin = document.getElementById(
+    "mensaje-usuarios-admin"
+);
+
+const cuerpoTablaUsuarios = document.getElementById(
+    "cuerpo-tabla-usuarios"
+);
+
+const modalUsuario = document.getElementById(
+    "modal-usuario"
+);
+
+const tituloModalUsuario = document.getElementById(
+    "titulo-modal-usuario"
+);
+
+const botonCerrarModalUsuario = document.getElementById(
+    "cerrar-modal-usuario"
+);
+
+const botonCancelarModalUsuario = document.getElementById(
+    "cancelar-modal-usuario"
+);
+
+const botonGuardarUsuario = document.getElementById(
+    "guardar-usuario"
+);
+
+const inputNombreUsuarioAdmin = document.getElementById(
+    "nombre-usuario-admin"
+);
+
+const inputUsuarioAdmin = document.getElementById(
+    "usuario-admin"
+);
+
+const inputPasswordUsuarioAdmin = document.getElementById(
+    "password-usuario-admin"
+);
+
+const selectRolUsuarioAdmin = document.getElementById(
+    "rol-usuario-admin"
+);
+
+const mensajeModalUsuario = document.getElementById(
+    "mensaje-modal-usuario"
+);
+
+const grupoPasswordUsuario = document.getElementById(
+    "grupo-password-usuario"
+);
+
+/* =========================================================
+   NAVEGACION DEL PANEL ADMINISTRADOR
+========================================================= */
+
+const botonesModuloAdministrador =
+    document.querySelectorAll(
+        ".boton-modulo-admin"
+    );
+
+const subvistasAdministrador =
+    document.querySelectorAll(
+        ".subvista-admin"
+    );
 
 /* =========================================================
    SESIÓN
@@ -2478,11 +2549,826 @@ document.addEventListener(
     }
 );
 
+botonNuevoUsuario.addEventListener(
+    "click",
+    () => {
+        abrirModalUsuario(
+            "crear"
+        );
+    }
+);
+
+
+botonCerrarModalUsuario.addEventListener(
+    "click",
+    cerrarModalUsuario
+);
+
+
+botonCancelarModalUsuario.addEventListener(
+    "click",
+    cerrarModalUsuario
+);
+
+botonGuardarUsuario.addEventListener(
+    "click",
+    crearNuevoUsuario
+);
+
+inputPasswordUsuarioAdmin.addEventListener(
+    "keydown",
+    (evento) => {
+        if (evento.key === "Enter") {
+            evento.preventDefault();
+
+            crearNuevoUsuario();
+        }
+    }
+);
+
+modalUsuario.addEventListener(
+    "click",
+    (evento) => {
+        if (evento.target === modalUsuario) {
+            cerrarModalUsuario();
+        }
+    }
+);
+
+
+document.addEventListener(
+    "keydown",
+    (evento) => {
+        if (
+            evento.key === "Escape"
+            && !modalUsuario.classList.contains(
+                "oculto"
+            )
+        ) {
+            cerrarModalUsuario();
+        }
+    }
+);
+
+/* =========================================================
+   MODAL DE USUARIOS
+========================================================= */
+
+function obtenerMensajeErrorUsuario(datos) {
+    if (
+        datos
+        && typeof datos.detail === "string"
+    ) {
+        return datos.detail;
+    }
+
+    if (
+        datos
+        && Array.isArray(datos.detail)
+        && datos.detail.length > 0
+    ) {
+        return (
+            datos.detail[0].msg
+            || "Los datos del usuario no son validos."
+        );
+    }
+
+    return "No fue posible guardar el usuario.";
+}
+
+function limpiarModalUsuario() {
+    inputNombreUsuarioAdmin.value = "";
+    inputUsuarioAdmin.value = "";
+    inputPasswordUsuarioAdmin.value = "";
+    selectRolUsuarioAdmin.value = ROL_FLETERO;
+
+    ocultarMensaje(
+        mensajeModalUsuario
+    );
+}
+
+
+function abrirModalUsuario(
+    modo = "crear",
+    usuario = null
+) {
+    if (
+        !usuarioActual
+        || usuarioActual.rol !== ROL_ADMIN
+    ) {
+        return;
+    }
+
+    limpiarModalUsuario();
+
+    modoFormularioUsuario = modo;
+
+    if (
+        modo === "editar"
+        && usuario
+    ) {
+        usuarioEditandoId = usuario.id;
+
+        tituloModalUsuario.textContent = (
+            "Editar usuario"
+        );
+
+        inputNombreUsuarioAdmin.value = (
+            usuario.nombre
+        );
+
+        inputUsuarioAdmin.value = (
+            usuario.usuario
+        );
+
+        selectRolUsuarioAdmin.value = (
+            usuario.rol
+        );
+
+        grupoPasswordUsuario.classList.add(
+            "oculto"
+        );
+
+        inputPasswordUsuarioAdmin.disabled = true;
+
+    } else {
+        usuarioEditandoId = null;
+
+        tituloModalUsuario.textContent = (
+            "Nuevo usuario"
+        );
+
+        grupoPasswordUsuario.classList.remove(
+            "oculto"
+        );
+
+        inputPasswordUsuarioAdmin.disabled = false;
+
+        selectRolUsuarioAdmin.value = (
+            ROL_FLETERO
+        );
+    }
+
+    modalUsuario.classList.remove(
+        "oculto"
+    );
+
+    setTimeout(
+        () => {
+            inputNombreUsuarioAdmin.focus();
+            inputNombreUsuarioAdmin.select();
+        },
+        50
+    );
+}
+
+
+function cerrarModalUsuario() {
+    modalUsuario.classList.add(
+        "oculto"
+    );
+
+    limpiarModalUsuario();
+}
+
+async function crearNuevoUsuario() {
+    ocultarMensaje(
+        mensajeModalUsuario
+    );
+
+    const nombre = inputNombreUsuarioAdmin.value
+        .trim()
+        .replace(/\s+/g, " ");
+
+    const nombreUsuario = inputUsuarioAdmin.value
+        .trim()
+        .toLowerCase();
+
+    const password = inputPasswordUsuarioAdmin.value;
+
+    const rol = selectRolUsuarioAdmin.value;
+
+    if (nombre.length < 2) {
+        mostrarMensaje(
+            mensajeModalUsuario,
+            "El nombre debe tener al menos 2 caracteres.",
+            "error"
+        );
+
+        inputNombreUsuarioAdmin.focus();
+
+        return;
+    }
+
+    if (nombre.length > 100) {
+        mostrarMensaje(
+            mensajeModalUsuario,
+            "El nombre no puede superar los 100 caracteres.",
+            "error"
+        );
+
+        inputNombreUsuarioAdmin.focus();
+
+        return;
+    }
+
+    if (nombreUsuario.length < 3) {
+        mostrarMensaje(
+            mensajeModalUsuario,
+            "El usuario debe tener al menos 3 caracteres.",
+            "error"
+        );
+
+        inputUsuarioAdmin.focus();
+
+        return;
+    }
+
+    if (nombreUsuario.length > 50) {
+        mostrarMensaje(
+            mensajeModalUsuario,
+            "El usuario no puede superar los 50 caracteres.",
+            "error"
+        );
+
+        inputUsuarioAdmin.focus();
+
+        return;
+    }
+
+    const esEdicion = (
+    modoFormularioUsuario === "editar"
+    && usuarioEditandoId !== null
+    );
+
+    if (
+       !esEdicion
+        && password.length < 8
+    ) {
+        mostrarMensaje(
+        mensajeModalUsuario,
+        "La contraseña debe tener al menos 8 caracteres.",
+        "error"
+        );
+
+        inputPasswordUsuarioAdmin.focus();
+
+        return;
+    }
+
+    if (
+        rol !== ROL_ADMIN
+        && rol !== ROL_FLETERO
+    ) {
+        mostrarMensaje(
+            mensajeModalUsuario,
+            "Selecciona un rol valido.",
+            "error"
+        );
+
+        selectRolUsuarioAdmin.focus();
+
+        return;
+    }
+
+    const token = obtenerToken();
+
+    if (!token) {
+        cerrarSesion();
+
+        mostrarMensaje(
+            mensajeLogin,
+            "La sesion ha finalizado. "
+            + "Inicia sesion nuevamente.",
+            "error"
+        );
+
+        return;
+    }
+
+    botonGuardarUsuario.disabled = true;
+    botonCancelarModalUsuario.disabled = true;
+    botonCerrarModalUsuario.disabled = true;
+
+    botonGuardarUsuario.textContent = "Guardando...";
+
+    try {
+        const url = esEdicion
+            ? `${API_URL}/admin/usuarios/${usuarioEditandoId}`
+           : `${API_URL}/admin/usuarios`;
+
+        const metodo = esEdicion
+            ? "PUT"
+            : "POST";
+
+        const respuesta = await fetch(
+            url,
+            {
+                method: metodo,
+                headers: {
+                    Authorization:
+                        `Bearer ${token}`,
+                    "Content-Type":
+                        "application/json",
+                },
+                body: JSON.stringify(
+                    esEdicion
+                        ? {
+                            nombre,
+                            usuario: nombreUsuario,
+                            rol,
+                        }
+                        : {
+                            nombre,
+                            usuario: nombreUsuario,
+                            password,
+                            rol,
+                        }
+                ),
+            }
+        );
+
+        const datos = await respuesta.json();
+
+        if (!respuesta.ok) {
+            throw new Error(
+                obtenerMensajeErrorUsuario(
+                    datos
+                )
+            );
+        }
+
+        cerrarModalUsuario();
+
+        modoFormularioUsuario = "crear";
+        usuarioEditandoId = null;
+
+        await Promise.all([
+            cargarUsuariosGestionAdministrador(),
+            cargarFleterosAdministrador(),
+        ]);
+
+        mostrarMensaje(
+            mensajeUsuariosAdmin,
+            `Usuario "${datos.nombre}" creado correctamente.`,
+            "exito"
+        );
+
+    } catch (error) {
+
+        mostrarMensaje(
+            mensajeModalUsuario,
+            error.message,
+            "error"
+        );
+
+    } finally {
+
+        botonGuardarUsuario.disabled = false;
+        botonCancelarModalUsuario.disabled = false;
+        botonCerrarModalUsuario.disabled = false;
+
+        botonGuardarUsuario.textContent = "Guardar";
+    }
+}
+
+async function cambiarEstadoUsuario(
+    usuario,
+    boton
+) {
+    const token = obtenerToken();
+
+    if (!token) {
+        limpiarSesion();
+        mostrarFormularioLogin();
+
+        mostrarMensaje(
+            mensajeLogin,
+            "La sesion ha finalizado. "
+            + "Inicia sesion nuevamente.",
+            "error"
+        );
+
+        return;
+    }
+
+    const nuevoEstado = !usuario.activo;
+
+    const accion = nuevoEstado
+        ? "activar"
+        : "desactivar";
+
+    const confirmacion = window.confirm(
+        `¿Deseas ${accion} al usuario "${usuario.nombre}"?`
+    );
+
+    if (!confirmacion) {
+        return;
+    }
+
+    ocultarMensaje(
+        mensajeUsuariosAdmin
+    );
+
+    boton.disabled = true;
+
+    boton.textContent = nuevoEstado
+        ? "Activando..."
+        : "Desactivando...";
+
+    try {
+        const respuesta = await fetch(
+            `${API_URL}/admin/usuarios/${usuario.id}/estado`,
+            {
+                method: "PATCH",
+                headers: {
+                    Authorization:
+                        `Bearer ${token}`,
+                    "Content-Type":
+                        "application/json",
+                },
+                body: JSON.stringify({
+                    activo: nuevoEstado,
+                }),
+            }
+        );
+
+        const datos = await respuesta.json();
+
+        if (!respuesta.ok) {
+            throw new Error(
+                obtenerMensajeErrorUsuario(
+                    datos
+                )
+            );
+        }
+
+        await Promise.all([
+            cargarUsuariosGestionAdministrador(),
+            cargarFleterosAdministrador(),
+        ]);
+
+        const mensajeEstado = datos.activo
+            ? `Usuario "${datos.nombre}" activado correctamente.`
+            : `Usuario "${datos.nombre}" desactivado correctamente.`;
+
+        mostrarMensaje(
+            mensajeUsuariosAdmin,
+            mensajeEstado,
+            "exito"
+        );
+
+    } catch (error) {
+        mostrarMensaje(
+            mensajeUsuariosAdmin,
+            error.message,
+            "error"
+        );
+
+        boton.disabled = false;
+
+        boton.textContent = usuario.activo
+            ? "Desactivar"
+            : "Activar";
+    }
+}
+
+/* =========================================================
+   LISTADO ADMINISTRATIVO DE USUARIOS
+========================================================= */
+
+function mostrarTablaUsuariosVacia(mensaje) {
+    cuerpoTablaUsuarios.innerHTML = `
+        <tr>
+            <td
+                colspan="6"
+                class="tabla-vacia"
+            >
+                ${mensaje}
+            </td>
+        </tr>
+    `;
+}
+
+
+function crearCeldaUsuario(texto) {
+    const celda = document.createElement(
+        "td"
+    );
+
+    celda.textContent = texto;
+
+    return celda;
+}
+
+
+function crearIndicadorEstadoUsuario(activo) {
+    const indicador = document.createElement(
+        "span"
+    );
+
+    indicador.textContent = activo
+        ? "Activo"
+        : "Inactivo";
+
+    indicador.className = activo
+        ? "estado-activo"
+        : "estado-inactivo";
+
+    return indicador;
+}
+
+
+function crearIndicadorRolUsuario(rol) {
+    const indicador = document.createElement(
+        "span"
+    );
+
+    indicador.textContent = rol;
+
+    indicador.className = (
+        rol === ROL_ADMIN
+            ? "estado-activo"
+            : "estado-inactivo"
+    );
+
+    return indicador;
+}
+
+
+function crearBotonAccionUsuario(
+    texto,
+    accion = null
+) {
+    const boton = document.createElement(
+        "button"
+    );
+
+    boton.type = "button";
+    boton.textContent = texto;
+    boton.className = "boton boton-secundario";
+
+    if (typeof accion === "function") {
+        boton.addEventListener(
+            "click",
+            accion
+        );
+    } else {
+        boton.disabled = true;
+    }
+
+    return boton;
+}
+
+
+function renderizarUsuariosAdministrador(usuarios) {
+    cuerpoTablaUsuarios.innerHTML = "";
+
+    if (usuarios.length === 0) {
+        mostrarTablaUsuariosVacia(
+            "No hay usuarios registrados."
+        );
+
+        return;
+    }
+
+    usuarios.forEach((usuario) => {
+        const fila = document.createElement(
+            "tr"
+        );
+
+        fila.appendChild(
+            crearCeldaUsuario(
+                String(usuario.id)
+            )
+        );
+
+        fila.appendChild(
+            crearCeldaUsuario(
+                usuario.nombre
+            )
+        );
+
+        fila.appendChild(
+            crearCeldaUsuario(
+                usuario.usuario
+            )
+        );
+
+        const celdaRol = document.createElement(
+            "td"
+        );
+
+        celdaRol.appendChild(
+            crearIndicadorRolUsuario(
+                usuario.rol
+            )
+        );
+
+        fila.appendChild(
+            celdaRol
+        );
+
+        const celdaEstado = document.createElement(
+            "td"
+        );
+
+        celdaEstado.appendChild(
+            crearIndicadorEstadoUsuario(
+                usuario.activo
+            )
+        );
+
+        fila.appendChild(
+            celdaEstado
+        );
+
+        const celdaAcciones = document.createElement(
+            "td"
+        );
+
+        const contenedorAcciones = document.createElement(
+            "div"
+        );
+
+        contenedorAcciones.className = "acciones-tabla";
+
+       const botonEditar = crearBotonAccionUsuario(
+            "Editar",
+            () => {
+                abrirModalUsuario(
+                    "editar",
+                    usuario
+                );
+            }
+        );
+
+        const botonEstado = crearBotonAccionUsuario(
+            usuario.activo
+                ? "Desactivar"
+                : "Activar",
+            (evento) => {
+                cambiarEstadoUsuario(
+                    usuario,
+                    evento.currentTarget
+                );
+            }
+        );
+
+        contenedorAcciones.appendChild(
+            botonEditar
+        );
+
+        contenedorAcciones.appendChild(
+            botonEstado
+        );
+
+        celdaAcciones.appendChild(
+            contenedorAcciones
+        );
+
+        fila.appendChild(
+            celdaAcciones
+        );
+
+        cuerpoTablaUsuarios.appendChild(
+            fila
+        );
+    });
+}
+
+
+async function cargarUsuariosGestionAdministrador() {
+    const token = obtenerToken();
+
+    if (!token) {
+        return;
+    }
+
+    ocultarMensaje(
+        mensajeUsuariosAdmin
+    );
+
+    mostrarTablaUsuariosVacia(
+        "Cargando usuarios..."
+    );
+
+    try {
+        const respuesta = await fetch(
+            `${API_URL}/admin/usuarios`,
+            {
+                method: "GET",
+                headers: {
+                    Authorization:
+                        `Bearer ${token}`,
+                },
+            }
+        );
+
+        const datos = await respuesta.json();
+
+        if (!respuesta.ok) {
+            throw new Error(
+                datos.detail
+                || "No fue posible cargar los usuarios."
+            );
+        }
+
+        const usuarios = Array.isArray(datos)
+            ? datos
+            : [];
+
+        renderizarUsuariosAdministrador(
+            usuarios
+        );
+
+    } catch (error) {
+        mostrarTablaUsuariosVacia(
+            "No fue posible cargar los usuarios."
+        );
+
+        mostrarMensaje(
+            mensajeUsuariosAdmin,
+            error.message,
+            "error"
+        );
+    }
+}
+
+/* =========================================================
+   SUBVISTAS DEL ADMINISTRADOR
+========================================================= */
+
+function mostrarSubvistaAdministrador(
+    nombreModulo
+) {
+
+    subvistasAdministrador.forEach(
+        (subvista) => {
+
+            if (
+                subvista.dataset.subvistaAdmin
+                === nombreModulo
+            ) {
+                subvista.classList.remove(
+                    "oculto"
+                );
+            } else {
+                subvista.classList.add(
+                    "oculto"
+                );
+            }
+
+        }
+    );
+
+    botonesModuloAdministrador.forEach(
+        (boton) => {
+
+            if (
+                boton.dataset.moduloAdmin
+                === nombreModulo
+            ) {
+                boton.classList.add(
+                    "activo"
+                );
+            } else {
+                boton.classList.remove(
+                    "activo"
+                );
+            }
+
+        }
+    );
+
+}
+
+botonesModuloAdministrador.forEach(
+    (boton) => {
+
+        boton.addEventListener(
+            "click",
+            () => {
+
+                mostrarSubvistaAdministrador(
+                    boton.dataset.moduloAdmin
+                );
+
+            }
+        );
+
+    }
+);
+
 /* =========================================================
    INICIALIZACIÓN DEL PANEL ADMINISTRATIVO
 ========================================================= */
 
 async function inicializarPanelAdministrador() {
+    mostrarSubvistaAdministrador(
+    "entregas"
+    );
+    
     ocultarMensaje(
         mensajeAdministrador
     );
@@ -2496,6 +3382,7 @@ async function inicializarPanelAdministrador() {
             cargarAgenciasAdministrador(),
             cargarFleterosAdministrador(),
             cargarAgenciasGestionAdministrador(),
+            cargarUsuariosGestionAdministrador(),
         ]);
 
         await consultarEntregasAdministrador();

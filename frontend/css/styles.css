@@ -699,3 +699,80 @@ select {
         width: min(100% - 20px, 620px);
     }
 }
+
+/* =========================================================
+   NAVEGACION INTERNA DEL ADMINISTRADOR
+========================================================= */
+
+.navegacion-administrador {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin: 24px 0;
+}
+
+.boton-modulo-admin {
+    width: 100%;
+    background: #e7edf3;
+    color: var(--azul-oscuro);
+}
+
+.boton-modulo-admin:hover:not(:disabled) {
+    background: #d9e4ee;
+}
+
+.boton-modulo-admin.activo {
+    background: var(--azul-principal);
+    color: var(--blanco);
+}
+
+.subvista-admin {
+    margin-top: 18px;
+}
+
+#tabla-agencias,
+#tabla-usuarios {
+    width: 100%;
+    min-width: 720px;
+    border-collapse: collapse;
+}
+
+#tabla-agencias th,
+#tabla-agencias td,
+#tabla-usuarios th,
+#tabla-usuarios td {
+    padding: 12px 11px;
+    border-bottom: 1px solid #e3e9ef;
+    text-align: left;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+#tabla-agencias th,
+#tabla-usuarios th {
+    background: var(--azul-oscuro);
+    color: var(--blanco);
+    font-size: 14px;
+}
+
+#tabla-agencias tbody tr:nth-child(even),
+#tabla-usuarios tbody tr:nth-child(even) {
+    background: var(--fondo-tabla);
+}
+
+#tabla-agencias tbody tr:hover,
+#tabla-usuarios tbody tr:hover {
+    background: #edf5fc;
+}
+
+#tabla-agencias td,
+#tabla-usuarios td {
+    color: #263548;
+    font-size: 14px;
+}
+
+@media (min-width: 700px) {
+    .navegacion-administrador {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}

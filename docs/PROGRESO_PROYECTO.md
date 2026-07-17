@@ -490,3 +490,43 @@ Fecha: 15/07/2026
 
 Estado:
 Versión estable.
+
+# Versión 2.4 – Administración visual de usuarios
+
+Fecha: 16/07/2026
+
+## Funcionalidades incorporadas
+
+- Navegación administrativa por subvistas:
+  - Entregas.
+  - Agencias.
+  - Usuarios.
+- Diseño mobile first para la navegación del administrador.
+- Listado de todos los usuarios.
+- Creación de usuarios ADMIN y FLETERO.
+- Contraseña mínima de 8 caracteres.
+- Edición de nombre, usuario y rol.
+- Activación y desactivación de usuarios.
+- Validación de usuario único sin distinguir mayúsculas y minúsculas.
+- El administrador no puede cambiar su propio rol a FLETERO.
+- El administrador no puede desactivar su propio usuario.
+- No se permite desactivar al último administrador activo.
+- Actualización automática de la tabla de usuarios.
+- Actualización automática del catálogo de fleteros activos.
+- Mensajes claros de éxito y error.
+- Conservación del historial mediante baja lógica, sin eliminación física.
+
+## Pruebas realizadas
+
+- Crear usuario.
+- Editar usuario.
+- Validar usuario duplicado.
+- Activar y desactivar fletero.
+- Bloquear acceso de usuario inactivo.
+- Reactivar usuario.
+- Proteger al administrador autenticado.
+- Validar ID inexistente.
+- Confirmar funcionamiento de Entregas, Agencias y exportación CSV.
+
+Estado:
+Versión estable y probada.
