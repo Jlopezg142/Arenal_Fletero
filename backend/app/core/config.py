@@ -10,14 +10,33 @@ load_dotenv(BASE_DIR / ".env")
 
 
 class Settings:
-    # Base de datos
-    DB_HOST: str = os.getenv("DB_HOST", "postgres")
-    DB_PORT: str = os.getenv("DB_PORT", "5432")
+    # URL completa usada en producción.
+    DATABASE_URL: str = os.getenv(
+        "DATABASE_URL",
+        ""
+    ).strip()
+
+    # Configuración local de PostgreSQL.
+    DB_HOST: str = os.getenv(
+        "DB_HOST",
+        "postgres"
+    )
+
+    DB_PORT: str = os.getenv(
+        "DB_PORT",
+        "5432"
+    )
+
     DB_NAME: str = os.getenv(
         "DB_NAME",
         "arenal_fletero"
     )
-    DB_USER: str = os.getenv("DB_USER", "postgres")
+
+    DB_USER: str = os.getenv(
+        "DB_USER",
+        "postgres"
+    )
+
     DB_PASSWORD: str = os.getenv(
         "DB_PASSWORD",
         "postgres123"
@@ -90,6 +109,18 @@ class Settings:
 
     @property
     def database_url(self) -> str:
+        if self.DATABASE_URL:
+            if self.DATABASE_URL.startswith(
+                "postgres://"
+            ):
+                return self.DATABASE_URL.replace(
+                    "postgres://",
+                    "postgresql://",
+                    1,
+                )
+
+            return self.DATABASE_URL
+
         return (
             f"postgresql://{self.DB_USER}:"
             f"{self.DB_PASSWORD}@"
