@@ -260,3 +260,27 @@ def cambiar_estado_usuario(
         db=db,
         usuario=usuario,
     )
+
+def restablecer_password_usuario(
+    db: Session,
+    usuario_id: int,
+    password: str,
+) -> Usuario:
+    usuario = buscar_por_id(
+        db=db,
+        usuario_id=usuario_id,
+    )
+
+    if usuario is None:
+        raise ErrorUsuario(
+            "El usuario no existe."
+        )
+
+    usuario.password_hash = generar_hash_password(
+        password
+    )
+
+    return actualizar_usuario(
+        db=db,
+        usuario=usuario,
+    )

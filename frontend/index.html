@@ -661,6 +661,91 @@
         </div>
     </div>
 
+        <!-- Modal Restablecer Contraseña -->
+    <div
+        id="modal-password-usuario"
+        class="modal oculto"
+    >
+        <div class="modal-contenido">
+
+            <div class="modal-encabezado">
+                <h3 id="titulo-modal-password-usuario">
+                    Restablecer contraseña
+                </h3>
+
+                <button
+                    type="button"
+                    id="cerrar-modal-password-usuario"
+                    class="boton-cerrar-modal"
+                    aria-label="Cerrar"
+                >
+                    X
+                </button>
+            </div>
+
+            <p
+                id="usuario-password-seleccionado"
+                class="texto-secundario"
+            ></p>
+
+            <div class="grupo-campo">
+                <label for="nueva-password-usuario">
+                    Nueva contraseña
+                </label>
+
+                <input
+                    type="password"
+                    id="nueva-password-usuario"
+                    minlength="8"
+                    maxlength="128"
+                    autocomplete="new-password"
+                >
+
+                <small class="texto-ayuda">
+                    Debe contener al menos 8 caracteres.
+                </small>
+            </div>
+
+            <div class="grupo-campo">
+                <label for="confirmar-password-usuario">
+                    Confirmar contraseña
+                </label>
+
+                <input
+                    type="password"
+                    id="confirmar-password-usuario"
+                    minlength="8"
+                    maxlength="128"
+                    autocomplete="new-password"
+                >
+            </div>
+
+            <div
+                id="mensaje-modal-password-usuario"
+                class="mensaje oculto"
+            ></div>
+
+            <div class="modal-botones">
+                <button
+                    type="button"
+                    id="cancelar-modal-password-usuario"
+                    class="boton boton-secundario"
+                >
+                    Cancelar
+                </button>
+
+                <button
+                    type="button"
+                    id="guardar-password-usuario"
+                    class="boton boton-principal"
+                >
+                    Guardar
+                </button>
+            </div>
+
+        </div>
+    </div>
+
     <!-- Modal Nueva Agencia -->
     <div
         id="modal-agencia"
@@ -724,6 +809,6 @@
         <span>Jl-A</span>
     </footer>
 
-    <script src="./js/app.js?v=2.4.7"></script>
+    <script src="./js/app.js?v=2.5.0"></script>
 </body>
 </html>

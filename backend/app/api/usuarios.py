@@ -16,6 +16,7 @@ from app.schemas.usuario_schema import (
     UsuarioAdminResponse,
     UsuarioCrearRequest,
     UsuarioEstadoRequest,
+    UsuarioPasswordRequest,
 )
 from app.services.usuario_service import (
     ErrorUsuario,
@@ -24,6 +25,7 @@ from app.services.usuario_service import (
     modificar_usuario,
     obtener_fleteros_activos,
     obtener_usuarios,
+    restablecer_password_usuario,
 )
 
 
@@ -174,3 +176,37 @@ def actualizar_estado_usuario(
             status_code=codigo,
             detail=mensaje,
         ) from error
+    
+@router.patch(
+    "/{usuario_id}/password",
+    response_model=UsuarioAdminResponse,
+    status_code=status.HTTP_200_OK,
+)
+def restablecer_password(
+    usuario_id: int,
+    datos: UsuarioPasswordRequest,
+    db: Session = Depends(get_db),
+    administrador: Usuario = Depends(
+        obtener_administrador
+    ),
+):
+    try:
+        return restablecer_password_usuario(
+            db=db,
+            usuario_id=usuario_id,
+            password=datos.password,
+        )
+
+    except ErrorUsuario as error:
+        mensaje = str(error)
+
+        codigo = (
+            status.HTTP_404_NOT_FOUND
+            if "no existe" in mensaje.lower()
+            else status.HTTP_409_CONFLICT
+        )
+
+        raise HTTPException(
+            status_code=codigo,
+            detail=mensaje,
+        ) from error    

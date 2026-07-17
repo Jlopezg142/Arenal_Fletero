@@ -530,3 +530,37 @@ Fecha: 16/07/2026
 
 Estado:
 Versión estable y probada.
+
+# Versión 2.5 – Restablecimiento de contraseña
+
+Fecha: 17/07/2026
+
+## Funcionalidades incorporadas
+
+- Restablecimiento de contraseña desde el módulo administrativo de usuarios.
+- Acción disponible únicamente para usuarios con rol ADMIN.
+- Modal específico para asignar una nueva contraseña.
+- Confirmación de la nueva contraseña.
+- Longitud mínima de 8 caracteres.
+- Longitud máxima de 128 caracteres.
+- Validación de coincidencia entre ambas contraseñas.
+- Generación segura de un nuevo hash de contraseña.
+- La contraseña anterior deja de funcionar inmediatamente.
+- La nueva contraseña permite iniciar sesión sin pasos adicionales.
+- No se muestra ni recupera la contraseña anterior.
+- No se modifican nombre, usuario, rol ni estado.
+
+## Pruebas realizadas
+
+- Restablecer contraseña de un usuario existente.
+- Validar usuario inexistente con respuesta 404.
+- Validar contraseñas distintas con respuesta 422.
+- Validar contraseña menor de 8 caracteres.
+- Confirmar que la contraseña anterior deja de funcionar.
+- Confirmar que la nueva contraseña permite iniciar sesión.
+- Validar apertura, cierre y limpieza del modal.
+- Guardar mediante botón y tecla Enter.
+- Confirmar que Agencias, Entregas y Usuarios continúan funcionando.
+
+Estado:
+Versión estable y probada.

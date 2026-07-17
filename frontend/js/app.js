@@ -12,6 +12,8 @@ let modoFormularioAgencia = "crear";
 let agenciaEditandoId = null;
 let modoFormularioUsuario = "crear";
 let usuarioEditandoId = null;
+let usuarioPasswordId = null;
+
 
 /* =========================================================
    ELEMENTOS GENERALES
@@ -244,6 +246,42 @@ const mensajeModalUsuario = document.getElementById(
 
 const grupoPasswordUsuario = document.getElementById(
     "grupo-password-usuario"
+);
+
+const modalPasswordUsuario = document.getElementById(
+    "modal-password-usuario"
+);
+
+const tituloModalPasswordUsuario = document.getElementById(
+    "titulo-modal-password-usuario"
+);
+
+const textoUsuarioPasswordSeleccionado = document.getElementById(
+    "usuario-password-seleccionado"
+);
+
+const botonCerrarModalPasswordUsuario = document.getElementById(
+    "cerrar-modal-password-usuario"
+);
+
+const botonCancelarModalPasswordUsuario = document.getElementById(
+    "cancelar-modal-password-usuario"
+);
+
+const botonGuardarPasswordUsuario = document.getElementById(
+    "guardar-password-usuario"
+);
+
+const inputNuevaPasswordUsuario = document.getElementById(
+    "nueva-password-usuario"
+);
+
+const inputConfirmarPasswordUsuario = document.getElementById(
+    "confirmar-password-usuario"
+);
+
+const mensajeModalPasswordUsuario = document.getElementById(
+    "mensaje-modal-password-usuario"
 );
 
 /* =========================================================
@@ -3033,6 +3071,212 @@ async function cambiarEstadoUsuario(
     }
 }
 
+function limpiarModalPasswordUsuario() {
+    usuarioPasswordId = null;
+
+    inputNuevaPasswordUsuario.value = "";
+    inputConfirmarPasswordUsuario.value = "";
+
+    textoUsuarioPasswordSeleccionado.textContent = "";
+
+    ocultarMensaje(
+        mensajeModalPasswordUsuario
+    );
+}
+
+
+function abrirModalPasswordUsuario(usuario) {
+    if (
+        !usuarioActual
+        || usuarioActual.rol !== ROL_ADMIN
+    ) {
+        return;
+    }
+
+    limpiarModalPasswordUsuario();
+
+    usuarioPasswordId = usuario.id;
+
+    tituloModalPasswordUsuario.textContent = (
+        "Restablecer contraseña"
+    );
+
+    textoUsuarioPasswordSeleccionado.textContent = (
+        `Usuario: ${usuario.nombre} (${usuario.usuario})`
+    );
+
+    modalPasswordUsuario.classList.remove(
+        "oculto"
+    );
+
+    setTimeout(
+        () => {
+            inputNuevaPasswordUsuario.focus();
+        },
+        50
+    );
+}
+
+
+function cerrarModalPasswordUsuario() {
+    modalPasswordUsuario.classList.add(
+        "oculto"
+    );
+
+    limpiarModalPasswordUsuario();
+}
+
+async function guardarPasswordUsuario() {
+    ocultarMensaje(
+        mensajeModalPasswordUsuario
+    );
+
+    const password =
+        inputNuevaPasswordUsuario.value.trim();
+
+    const confirmarPassword =
+        inputConfirmarPasswordUsuario.value.trim();
+
+    if (password.length < 8) {
+        mostrarMensaje(
+            mensajeModalPasswordUsuario,
+            "La contraseña debe tener al menos 8 caracteres.",
+            "error"
+        );
+        return;
+    }
+
+    if (password !== confirmarPassword) {
+        mostrarMensaje(
+            mensajeModalPasswordUsuario,
+            "Las contraseñas no coinciden.",
+            "error"
+        );
+        return;
+    }
+
+    const token = obtenerToken();
+
+    if (!token) {
+        mostrarMensaje(
+            mensajeModalPasswordUsuario,
+            "La sesión ha expirado.",
+            "error"
+        );
+        return;
+    }
+
+    botonGuardarPasswordUsuario.disabled = true;
+    botonCancelarModalPasswordUsuario.disabled = true;
+    botonCerrarModalPasswordUsuario.disabled = true;
+
+    botonGuardarPasswordUsuario.textContent =
+        "Guardando...";
+
+    try {
+        const respuesta = await fetch(
+            `${API_URL}/admin/usuarios/${usuarioPasswordId}/password`,
+            {
+                method: "PATCH",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    password: password,
+                    confirmar_password: confirmarPassword
+                })
+            }
+        );
+
+        const datos = await respuesta.json();
+
+        if (!respuesta.ok) {
+            throw new Error(
+                datos.detail || "No fue posible actualizar la contraseña."
+            );
+        }
+
+        cerrarModalPasswordUsuario();
+
+        mostrarMensaje(
+            mensajeUsuariosAdmin,
+            "Contraseña restablecida correctamente.",
+            "exito"
+        );
+
+    } catch (error) {
+
+        mostrarMensaje(
+            mensajeModalPasswordUsuario,
+            error.message,
+            "error"
+        );
+
+    } finally {
+
+        botonGuardarPasswordUsuario.disabled = false;
+        botonCancelarModalPasswordUsuario.disabled = false;
+        botonCerrarModalPasswordUsuario.disabled = false;
+
+        botonGuardarPasswordUsuario.textContent =
+            "Guardar";
+    }
+}
+
+botonCerrarModalPasswordUsuario.addEventListener(
+    "click",
+    cerrarModalPasswordUsuario
+);
+
+
+botonCancelarModalPasswordUsuario.addEventListener(
+    "click",
+    cerrarModalPasswordUsuario
+);
+
+botonGuardarPasswordUsuario.addEventListener(
+    "click",
+    guardarPasswordUsuario
+);
+
+inputConfirmarPasswordUsuario.addEventListener(
+    "keydown",
+    (evento) => {
+        if (evento.key === "Enter") {
+            evento.preventDefault();
+            guardarPasswordUsuario();
+        }
+    }
+);
+
+modalPasswordUsuario.addEventListener(
+    "click",
+    (evento) => {
+        if (
+            evento.target
+            === modalPasswordUsuario
+        ) {
+            cerrarModalPasswordUsuario();
+        }
+    }
+);
+
+
+document.addEventListener(
+    "keydown",
+    (evento) => {
+        if (
+            evento.key === "Escape"
+            && !modalPasswordUsuario.classList.contains(
+                "oculto"
+            )
+        ) {
+            cerrarModalPasswordUsuario();
+        }
+    }
+);
+
 /* =========================================================
    LISTADO ADMINISTRATIVO DE USUARIOS
 ========================================================= */
@@ -3203,6 +3447,15 @@ function renderizarUsuariosAdministrador(usuarios) {
             }
         );
 
+        const botonPassword = crearBotonAccionUsuario(
+            "Contraseña",
+            () => {
+                abrirModalPasswordUsuario(
+                    usuario
+                );
+            }
+        );    
+
         const botonEstado = crearBotonAccionUsuario(
             usuario.activo
                 ? "Desactivar"
@@ -3217,6 +3470,10 @@ function renderizarUsuariosAdministrador(usuarios) {
 
         contenedorAcciones.appendChild(
             botonEditar
+        );
+
+        contenedorAcciones.appendChild(
+            botonPassword
         );
 
         contenedorAcciones.appendChild(

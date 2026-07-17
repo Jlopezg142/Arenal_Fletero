@@ -95,6 +95,37 @@ class UsuarioActualizarRequest(BaseModel):
 class UsuarioEstadoRequest(BaseModel):
     activo: bool
 
+class UsuarioPasswordRequest(BaseModel):
+    password: str = Field(
+        min_length=8,
+        max_length=128,
+    )
+
+    confirmar_password: str = Field(
+        min_length=8,
+        max_length=128,
+    )
+
+    @field_validator("confirmar_password")
+    @classmethod
+    def validar_confirmacion(
+        cls,
+        valor,
+        info,
+    ):
+        password = info.data.get(
+            "password"
+        )
+
+        if (
+            password is not None
+            and valor != password
+        ):
+            raise ValueError(
+                "Las contraseñas no coinciden."
+            )
+
+        return valor
 
 class UsuarioAdminResponse(BaseModel):
     id: int
