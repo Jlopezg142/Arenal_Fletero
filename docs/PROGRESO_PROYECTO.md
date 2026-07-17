@@ -564,3 +564,47 @@ Fecha: 17/07/2026
 
 Estado:
 Versión estable y probada.
+
+# Versión 2.6 – Modularización base del frontend
+
+Fecha: 17/07/2026
+
+## Objetivo
+
+Mejorar la organización del frontend sin modificar el comportamiento funcional de la aplicación.
+
+## Cambios incorporados
+
+- Creación de `frontend/js/config.js`.
+- Creación de `frontend/js/utilidades.js`.
+- Creación de `frontend/js/auth.js`.
+- Creación de `frontend/js/admin-usuarios.js`.
+- Separación de configuración, utilidades, autenticación y estructura del módulo administrativo de usuarios.
+- Uso del espacio global `window.Arenal` para compartir módulos.
+- Conservación de compatibilidad con el frontend existente.
+- Ajustes de caché mediante versiones en las referencias JavaScript.
+- Eliminación de código experimental no integrado.
+- No se agregaron funcionalidades nuevas.
+
+## Pruebas realizadas
+
+- Login incorrecto y correcto.
+- Login ADMIN y FLETERO.
+- Restauración de sesión.
+- Cierre de sesión.
+- Navegación administrativa.
+- Consulta y filtros de entregas.
+- Exportación CSV.
+- Creación, edición y estado de agencias.
+- Creación, edición y estado de usuarios.
+- Restablecimiento de contraseña.
+- Registro de entregas.
+- GPS y fotografías.
+- Validación de envío duplicado.
+- Revisión de consola del navegador.
+- Revisión de logs de backend.
+- Confirmación de ausencia de errores 500 y errores JavaScript.
+
+## Estado
+
+Versión estable, probada y lista para preparación de producción.
