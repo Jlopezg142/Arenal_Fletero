@@ -336,6 +336,17 @@ function limpiarSesion() {
     usuarioActual = null;
 }
 
+const moduloAdminUsuarios =
+    window.Arenal.crearModuloAdminUsuarios({
+        ROL_ADMIN,
+        ROL_FLETERO,
+
+        obtenerUsuarioActual: () => (
+            usuarioActual
+        ),
+
+        ocultarMensaje,
+    });
 
 /* =========================================================
    NAVEGACIÓN SEGÚN ROL
