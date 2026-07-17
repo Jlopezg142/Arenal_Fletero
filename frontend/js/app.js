@@ -1,18 +1,26 @@
 "use strict";
 
-const API_URL = "";
+const {
+    mostrarMensaje,
+    ocultarMensaje,
+} = window.Arenal.utilidades;
 
-const ROL_ADMIN = "ADMIN";
-const ROL_FLETERO = "FLETERO";
+const {
+    API_URL,
+    ROL_ADMIN,
+    ROL_FLETERO,
+} = window.Arenal.config;
 
-let ubicacionActual = null;
-let usuarioActual = null;
-let consultaAdministradorEnProceso = false;
-let modoFormularioAgencia = "crear";
-let agenciaEditandoId = null;
-let modoFormularioUsuario = "crear";
-let usuarioEditandoId = null;
-let usuarioPasswordId = null;
+let {
+    ubicacionActual,
+    usuarioActual,
+    consultaAdministradorEnProceso,
+    modoFormularioAgencia,
+    agenciaEditandoId,
+    modoFormularioUsuario,
+    usuarioEditandoId,
+    usuarioPasswordId,
+} = window.Arenal.estado;
 
 
 /* =========================================================
@@ -302,137 +310,30 @@ const subvistasAdministrador =
    SESIÓN
 ========================================================= */
 
-function obtenerToken() {
-    return sessionStorage.getItem(
-        "arenal_token"
-    );
-}
-
-
-function guardarToken(token) {
-    sessionStorage.setItem(
-        "arenal_token",
-        token
-    );
-}
+const {
+    obtenerToken,
+    guardarToken,
+    guardarUsuarioEnStorage,
+    obtenerUsuarioGuardado,
+    limpiarSesionEnStorage,
+    consultarUsuarioActual,
+    iniciarSesion,
+} = window.Arenal.auth;
 
 
 function guardarUsuario(usuario) {
     usuarioActual = usuario;
 
-    sessionStorage.setItem(
-        "arenal_usuario",
-        JSON.stringify(usuario)
+    guardarUsuarioEnStorage(
+        usuario
     );
-}
-
-
-function obtenerUsuarioGuardado() {
-    const usuarioGuardado = sessionStorage.getItem(
-        "arenal_usuario"
-    );
-
-    if (!usuarioGuardado) {
-        return null;
-    }
-
-    try {
-        return JSON.parse(
-            usuarioGuardado
-        );
-
-    } catch {
-        sessionStorage.removeItem(
-            "arenal_usuario"
-        );
-
-        return null;
-    }
 }
 
 
 function limpiarSesion() {
-    sessionStorage.removeItem(
-        "arenal_token"
-    );
-
-    sessionStorage.removeItem(
-        "arenal_usuario"
-    );
+    limpiarSesionEnStorage();
 
     usuarioActual = null;
-}
-
-
-async function consultarUsuarioActual() {
-    const token = obtenerToken();
-
-    if (!token) {
-        throw new Error(
-            "No existe una sesión activa."
-        );
-    }
-
-    const respuesta = await fetch(
-        `${API_URL}/auth/me`,
-        {
-            method: "GET",
-            headers: {
-                Authorization:
-                    `Bearer ${token}`,
-            },
-        }
-    );
-
-    const datos = await respuesta.json();
-
-    if (!respuesta.ok) {
-        throw new Error(
-            datos.detail
-            || "La sesión no es válida."
-        );
-    }
-
-    return datos;
-}
-
-
-/* =========================================================
-   MENSAJES
-========================================================= */
-
-function mostrarMensaje(
-    elemento,
-    mensaje,
-    tipo
-) {
-    elemento.textContent = mensaje;
-
-    elemento.classList.remove(
-        "oculto",
-        "mensaje-exito",
-        "mensaje-error"
-    );
-
-    elemento.classList.add(
-        tipo === "exito"
-            ? "mensaje-exito"
-            : "mensaje-error"
-    );
-}
-
-
-function ocultarMensaje(elemento) {
-    elemento.textContent = "";
-
-    elemento.classList.add(
-        "oculto"
-    );
-
-    elemento.classList.remove(
-        "mensaje-exito",
-        "mensaje-error"
-    );
 }
 
 
@@ -549,56 +450,6 @@ async function prepararInterfazPorRol(usuario) {
 /* =========================================================
    LOGIN
 ========================================================= */
-
-async function iniciarSesion(
-    usuario,
-    password
-) {
-    const datosLogin = new URLSearchParams();
-
-    datosLogin.append(
-        "username",
-        usuario
-    );
-
-    datosLogin.append(
-        "password",
-        password
-    );
-
-    const respuesta = await fetch(
-        `${API_URL}/auth/login`,
-        {
-            method: "POST",
-            headers: {
-                "Content-Type":
-                    "application/x-www-form-urlencoded",
-            },
-            body: datosLogin,
-        }
-    );
-
-    const datos = await respuesta.json();
-
-    if (!respuesta.ok) {
-        throw new Error(
-            datos.detail
-            || "No fue posible iniciar sesión."
-        );
-    }
-
-    if (
-        !datos.access_token
-        || !datos.usuario
-    ) {
-        throw new Error(
-            "La respuesta del servidor "
-            + "no contiene la sesión completa."
-        );
-    }
-
-    return datos;
-}
 
 
 formLogin.addEventListener(
