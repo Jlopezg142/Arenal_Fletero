@@ -2,7 +2,15 @@ from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
 
+import boto3
+from botocore.exceptions import (
+    BotoCoreError,
+    ClientError,
+)
 from fastapi import UploadFile
+from starlette.concurrency import run_in_threadpool
+
+from app.core.config import settings
 
 
 class ErrorArchivoEntrega(Exception):
@@ -25,6 +33,130 @@ TAMANO_MAXIMO = 5 * 1024 * 1024
 APP_DIR = Path(__file__).resolve().parent.parent
 UPLOADS_DIR = APP_DIR / "uploads"
 ENTREGAS_DIR = UPLOADS_DIR / "entregas"
+
+
+def _usar_r2() -> bool:
+    return (
+        settings.STORAGE_TYPE
+        .strip()
+        .lower()
+        == "r2"
+    )
+
+
+def _validar_configuracion_r2() -> None:
+    variables_requeridas = {
+        "R2_ACCOUNT_ID": settings.R2_ACCOUNT_ID,
+        "R2_ACCESS_KEY_ID": settings.R2_ACCESS_KEY_ID,
+        "R2_SECRET_ACCESS_KEY": (
+            settings.R2_SECRET_ACCESS_KEY
+        ),
+        "R2_BUCKET_NAME": settings.R2_BUCKET_NAME,
+        "R2_PUBLIC_URL": settings.R2_PUBLIC_URL,
+    }
+
+    variables_faltantes = [
+        nombre
+        for nombre, valor
+        in variables_requeridas.items()
+        if not valor.strip()
+    ]
+
+    if variables_faltantes:
+        raise ErrorArchivoEntrega(
+            "La configuración del almacenamiento "
+            "R2 está incompleta: "
+            + ", ".join(variables_faltantes)
+            + "."
+        )
+
+
+def _crear_cliente_r2():
+    _validar_configuracion_r2()
+
+    endpoint_url = (
+        "https://"
+        f"{settings.R2_ACCOUNT_ID.strip()}"
+        ".r2.cloudflarestorage.com"
+    )
+
+    return boto3.client(
+        "s3",
+        endpoint_url=endpoint_url,
+        aws_access_key_id=(
+            settings.R2_ACCESS_KEY_ID.strip()
+        ),
+        aws_secret_access_key=(
+            settings.R2_SECRET_ACCESS_KEY.strip()
+        ),
+        region_name="auto",
+    )
+
+
+def _subir_foto_r2(
+    contenido: bytes,
+    clave_objeto: str,
+    tipo_contenido: str,
+) -> str:
+    try:
+        cliente = _crear_cliente_r2()
+
+        cliente.put_object(
+            Bucket=settings.R2_BUCKET_NAME.strip(),
+            Key=clave_objeto,
+            Body=contenido,
+            ContentType=tipo_contenido,
+        )
+
+    except (
+        BotoCoreError,
+        ClientError,
+    ) as error:
+        raise ErrorArchivoEntrega(
+            "No fue posible guardar la fotografía "
+            "en el almacenamiento R2."
+        ) from error
+
+    url_publica = (
+        settings.R2_PUBLIC_URL
+        .strip()
+        .rstrip("/")
+    )
+
+    return (
+        f"{url_publica}/{clave_objeto}"
+    )
+
+
+def _guardar_foto_local(
+    contenido: bytes,
+    clave_objeto: str,
+) -> str:
+    ruta_archivo = (
+        UPLOADS_DIR
+        / Path(clave_objeto)
+    )
+
+    try:
+        ruta_archivo.parent.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+
+        ruta_archivo.write_bytes(
+            contenido
+        )
+
+    except OSError as error:
+        raise ErrorArchivoEntrega(
+            "No fue posible guardar "
+            "la fotografía."
+        ) from error
+
+    return (
+        "/uploads/"
+        + clave_objeto
+    )
 
 
 async def guardar_foto_entrega(
@@ -67,56 +199,86 @@ async def guardar_foto_entrega(
 
     fecha_actual = datetime.now()
 
-    carpeta_destino = (
-        ENTREGAS_DIR
-        / str(fecha_actual.year)
-        / f"{fecha_actual.month:02d}"
-    )
-
-    carpeta_destino.mkdir(
-        parents=True,
-        exist_ok=True,
-    )
-
     nombre_archivo = (
         f"{uuid4().hex}{extension}"
     )
 
-    ruta_archivo = (
-        carpeta_destino
-        / nombre_archivo
+    clave_objeto = (
+        "entregas/"
+        f"{fecha_actual.year}/"
+        f"{fecha_actual.month:02d}/"
+        f"{nombre_archivo}"
     )
 
-    try:
-        ruta_archivo.write_bytes(
-            contenido
+    if _usar_r2():
+        return await run_in_threadpool(
+            _subir_foto_r2,
+            contenido,
+            clave_objeto,
+            foto.content_type,
         )
 
-    except OSError as error:
-        raise ErrorArchivoEntrega(
-            "No fue posible guardar "
-            "la fotografía."
-        ) from error
-
-    ruta_relativa = (
-        Path("entregas")
-        / str(fecha_actual.year)
-        / f"{fecha_actual.month:02d}"
-        / nombre_archivo
-    )
-
-    return (
-        "/uploads/"
-        + ruta_relativa.as_posix()
+    return await run_in_threadpool(
+        _guardar_foto_local,
+        contenido,
+        clave_objeto,
     )
 
 
-def eliminar_foto_entrega(
-    foto_url: str | None,
+def _obtener_clave_desde_url_r2(
+    foto_url: str,
+) -> str | None:
+    url_publica = (
+        settings.R2_PUBLIC_URL
+        .strip()
+        .rstrip("/")
+    )
+
+    prefijo = f"{url_publica}/"
+
+    if not foto_url.startswith(prefijo):
+        return None
+
+    clave_objeto = foto_url.removeprefix(
+        prefijo
+    )
+
+    return clave_objeto or None
+
+
+def _eliminar_foto_r2(
+    foto_url: str,
 ) -> None:
-    if not foto_url:
+    clave_objeto = (
+        _obtener_clave_desde_url_r2(
+            foto_url
+        )
+    )
+
+    if not clave_objeto:
         return
 
+    try:
+        cliente = _crear_cliente_r2()
+
+        cliente.delete_object(
+            Bucket=settings.R2_BUCKET_NAME.strip(),
+            Key=clave_objeto,
+        )
+
+    except (
+        BotoCoreError,
+        ClientError,
+        ErrorArchivoEntrega,
+    ):
+        # Es una limpieza secundaria.
+        # No debe ocultar el error principal.
+        pass
+
+
+def _eliminar_foto_local(
+    foto_url: str,
+) -> None:
     prefijo = "/uploads/"
 
     if not foto_url.startswith(prefijo):
@@ -136,7 +298,21 @@ def eliminar_foto_entrega(
             ruta_archivo.unlink()
 
     except OSError:
-        # La eliminación es un procedimiento
-        # de limpieza. No debe ocultar el error
-        # principal del registro.
         pass
+
+
+def eliminar_foto_entrega(
+    foto_url: str | None,
+) -> None:
+    if not foto_url:
+        return
+
+    if _usar_r2():
+        _eliminar_foto_r2(
+            foto_url
+        )
+        return
+
+    _eliminar_foto_local(
+        foto_url
+    )
