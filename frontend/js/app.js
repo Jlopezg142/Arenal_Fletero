@@ -112,6 +112,19 @@ const inputFotoLugar = document.getElementById(
     "foto_lugar"
 );
 
+const TAMANO_MAXIMO_FOTOGRAFIA = 5 * 1024 * 1024;
+const DIMENSION_MAXIMA_INICIAL = 1920;
+const CALIDADES_JPEG = [
+    0.82,
+    0.77,
+    0.72,
+    0.67,
+    0.65,
+];
+const MAXIMO_INTENTOS_DIMENSION = 6;
+
+let registroEntregaEnProceso = false;
+
 
 /* =========================================================
    ELEMENTOS DEL ADMINISTRADOR
@@ -936,6 +949,209 @@ function validarFotografias() {
 }
 
 
+function cargarImagenFotografia(archivo) {
+    return new Promise((resolve, reject) => {
+        const urlTemporal = URL.createObjectURL(
+            archivo
+        );
+
+        const imagen = new Image();
+
+        imagen.onload = () => {
+            URL.revokeObjectURL(urlTemporal);
+            resolve(imagen);
+        };
+
+        imagen.onerror = () => {
+            URL.revokeObjectURL(urlTemporal);
+            reject(new Error(
+                "No fue posible decodificar la fotografía."
+            ));
+        };
+
+        imagen.src = urlTemporal;
+    });
+}
+
+
+function calcularDimensionesFotografia(
+    anchoOriginal,
+    altoOriginal,
+    ladoMaximo
+) {
+    const proporcion = Math.min(
+        1,
+        ladoMaximo / Math.max(
+            anchoOriginal,
+            altoOriginal
+        )
+    );
+
+    return {
+        ancho: Math.max(
+            1,
+            Math.round(anchoOriginal * proporcion)
+        ),
+        alto: Math.max(
+            1,
+            Math.round(altoOriginal * proporcion)
+        ),
+    };
+}
+
+
+function convertirCanvasABlob(canvas, calidad) {
+    return new Promise((resolve, reject) => {
+        canvas.toBlob(
+            (blob) => {
+                if (!blob) {
+                    reject(new Error(
+                        "No fue posible convertir la fotografía."
+                    ));
+                    return;
+                }
+
+                resolve(blob);
+            },
+            "image/jpeg",
+            calidad
+        );
+    });
+}
+
+
+function generarNombreFotografiaOptimizada(
+    nombreOriginal
+) {
+    const nombreSinExtension = nombreOriginal.replace(
+        /\.[^/.]+$/,
+        ""
+    );
+
+    return `${nombreSinExtension || "fotografia"}_optimizada.jpg`;
+}
+
+
+async function optimizarFotografia(archivo) {
+    if (archivo.size <= TAMANO_MAXIMO_FOTOGRAFIA) {
+        return archivo;
+    }
+
+    if (![
+        "image/jpeg",
+        "image/png",
+    ].includes(archivo.type)) {
+        throw new Error(
+            "La fotografía no tiene un formato compatible."
+        );
+    }
+
+    const imagen = await cargarImagenFotografia(
+        archivo
+    );
+
+    const canvas = document.createElement("canvas");
+    const contexto = canvas.getContext("2d");
+
+    if (!contexto) {
+        throw new Error(
+            "No fue posible preparar la fotografía."
+        );
+    }
+
+    let ladoMaximo = DIMENSION_MAXIMA_INICIAL;
+
+    try {
+        for (
+            let intentoDimension = 0;
+            intentoDimension < MAXIMO_INTENTOS_DIMENSION;
+            intentoDimension += 1
+        ) {
+            const dimensiones = calcularDimensionesFotografia(
+                imagen.naturalWidth,
+                imagen.naturalHeight,
+                ladoMaximo
+            );
+
+            canvas.width = dimensiones.ancho;
+            canvas.height = dimensiones.alto;
+
+            contexto.fillStyle = "#ffffff";
+            contexto.fillRect(
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+
+            contexto.drawImage(
+                imagen,
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+
+            for (const calidad of CALIDADES_JPEG) {
+                const blob = await convertirCanvasABlob(
+                    canvas,
+                    calidad
+                );
+
+                if (blob.size <= TAMANO_MAXIMO_FOTOGRAFIA) {
+                    return new File(
+                        [blob],
+                        generarNombreFotografiaOptimizada(
+                            archivo.name
+                        ),
+                        {
+                            type: "image/jpeg",
+                            lastModified: Date.now(),
+                        }
+                    );
+                }
+            }
+
+            ladoMaximo = Math.max(
+                1,
+                Math.floor(ladoMaximo * 0.85)
+            );
+        }
+    } finally {
+        canvas.width = 0;
+        canvas.height = 0;
+    }
+
+    throw new Error(
+        "No fue posible obtener una fotografía optimizada."
+    );
+}
+
+
+async function prepararFotografiasEntrega() {
+    try {
+        const fotoEnvio = await optimizarFotografia(
+            inputFotoEnvio.files[0]
+        );
+
+        const fotoLugar = await optimizarFotografia(
+            inputFotoLugar.files[0]
+        );
+
+        return {
+            fotoEnvio,
+            fotoLugar,
+        };
+
+    } catch (error) {
+        throw new Error(
+            "No fue posible optimizar una de las fotografías. "
+            + "Intenta tomarla nuevamente."
+        );
+    }
+}
+
+
 /* =========================================================
    REGISTRO DE ENTREGA DEL FLETERO
 ========================================================= */
@@ -944,6 +1160,10 @@ formEntrega.addEventListener(
     "submit",
     async (evento) => {
         evento.preventDefault();
+
+        if (registroEntregaEnProceso) {
+            return;
+        }
 
         ocultarMensaje(
             mensajeEntrega
@@ -1012,36 +1232,57 @@ formEntrega.addEventListener(
 
         restaurarUbicacionEnFormulario();
 
-        const datosEntrega = new FormData(
-            formEntrega
-        );
-
-        datosEntrega.set(
-            "agencia_id",
-            selectAgencia.value
-        );
-
-        datosEntrega.set(
-            "latitud",
-            ubicacionActual.latitud
-        );
-
-        datosEntrega.set(
-            "longitud",
-            ubicacionActual.longitud
-        );
+        registroEntregaEnProceso = true;
 
         botonRegistrar.disabled = true;
         botonObtenerUbicacion.disabled = true;
-        selectAgencia.disabled = true;
-        inputFotoEnvio.disabled = true;
-        inputFotoLugar.disabled = true;
 
         botonRegistrar.textContent = (
-            "Registrando..."
+            "Preparando fotografías..."
         );
 
         try {
+            const fotografias = (
+                await prepararFotografiasEntrega()
+            );
+
+            const datosEntrega = new FormData(
+                formEntrega
+            );
+
+            datosEntrega.set(
+                "agencia_id",
+                selectAgencia.value
+            );
+
+            datosEntrega.set(
+                "latitud",
+                ubicacionActual.latitud
+            );
+
+            datosEntrega.set(
+                "longitud",
+                ubicacionActual.longitud
+            );
+
+            datosEntrega.set(
+                "foto_envio",
+                fotografias.fotoEnvio
+            );
+
+            datosEntrega.set(
+                "foto_lugar",
+                fotografias.fotoLugar
+            );
+
+            selectAgencia.disabled = true;
+            inputFotoEnvio.disabled = true;
+            inputFotoLugar.disabled = true;
+
+            botonRegistrar.textContent = (
+                "Registrando..."
+            );
+
             const respuesta = await fetch(
                 `${API_URL}/entregas`,
                 {
@@ -1087,6 +1328,8 @@ formEntrega.addEventListener(
             );
 
         } finally {
+            registroEntregaEnProceso = false;
+
             botonRegistrar.textContent = (
                 "Registrar entrega"
             );
