@@ -173,6 +173,10 @@ const cuerpoTablaEntregas = document.getElementById(
 const botonExportar = document.getElementById(
     "boton-exportar"
 );
+
+const botonExportarPDF = document.getElementById(
+    "boton-exportar-pdf"
+);
 const botonNuevaAgencia = document.getElementById(
     "boton-nueva-agencia"
 );
@@ -590,6 +594,7 @@ function reiniciarPanelAdministrador() {
     totalEntregas.textContent = "0";
 
     botonExportar.disabled = true;
+    botonExportarPDF.disabled = true;
 
     cuerpoTablaEntregas.innerHTML = `
         <tr>
@@ -1564,6 +1569,9 @@ function renderizarEntregas(entregas) {
     botonExportar.disabled = (
         entregas.length === 0
     );
+    botonExportarPDF.disabled = (
+        entregas.length === 0
+    );
 
     if (entregas.length === 0) {
         mostrarTablaVacia(
@@ -1859,6 +1867,103 @@ async function exportarCSV() {
 }
 
 
+async function exportarPDF() {
+    const token = obtenerToken();
+
+    if (!token) {
+        cerrarSesion();
+
+        mostrarMensaje(
+            mensajeLogin,
+            "La sesión ha finalizado. "
+            + "Inicia sesión nuevamente.",
+            "error"
+        );
+
+        return;
+    }
+
+    ocultarMensaje(
+        mensajeAdministrador
+    );
+
+    botonExportarPDF.disabled = true;
+    botonExportarPDF.textContent = "Generando PDF...";
+
+    try {
+        const parametros = construirParametrosConsulta();
+        const url = parametros.toString()
+            ? (
+                `${API_URL}/admin/exportar-entregas.pdf`
+                + `?${parametros.toString()}`
+            )
+            : `${API_URL}/admin/exportar-entregas.pdf`;
+        const respuesta = await fetch(
+            url,
+            {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+
+        if (!respuesta.ok) {
+            let mensaje = "No fue posible exportar el PDF.";
+
+            try {
+                const datosError = await respuesta.json();
+                mensaje = datosError.detail || mensaje;
+
+            } catch {
+                // El servidor podría responder texto.
+            }
+
+            throw new Error(mensaje);
+        }
+
+        const archivo = await respuesta.blob();
+        const disposicion = respuesta.headers.get(
+            "Content-Disposition"
+        );
+        const coincidencia = disposicion?.match(
+            /filename="?([^";]+)"?/i
+        );
+        const nombreArchivo = coincidencia
+            ? coincidencia[1]
+            : "arenal_entregas.pdf";
+        const urlTemporal = URL.createObjectURL(archivo);
+        const enlace = document.createElement("a");
+
+        enlace.href = urlTemporal;
+        enlace.download = nombreArchivo;
+        document.body.appendChild(enlace);
+        enlace.click();
+        enlace.remove();
+        URL.revokeObjectURL(urlTemporal);
+
+        mostrarMensaje(
+            mensajeAdministrador,
+            "El archivo PDF fue generado correctamente.",
+            "exito"
+        );
+
+    } catch (error) {
+        mostrarMensaje(
+            mensajeAdministrador,
+            error.message,
+            "error"
+        );
+
+    } finally {
+        botonExportarPDF.textContent = "Exportar PDF";
+        botonExportarPDF.disabled = (
+            Number(totalEntregas.textContent) === 0
+        );
+    }
+}
+
+
 async function consultarEntregasAdministrador() {
     if (consultaAdministradorEnProceso) {
         return;
@@ -1871,6 +1976,7 @@ async function consultarEntregasAdministrador() {
             < filtroFechaInicio.value
     ) {
         botonExportar.disabled = true;
+        botonExportarPDF.disabled = true;
 
         mostrarMensaje(
             mensajeAdministrador,
@@ -1894,6 +2000,7 @@ async function consultarEntregasAdministrador() {
 
     totalEntregas.textContent = "0";
     botonExportar.disabled = true;
+    botonExportarPDF.disabled = true;
 
     try {
         const token = obtenerToken();
@@ -1936,6 +2043,7 @@ async function consultarEntregasAdministrador() {
     } catch (error) {
         totalEntregas.textContent = "0";
         botonExportar.disabled = true;
+        botonExportarPDF.disabled = true;
 
         mostrarTablaVacia(
             "No fue posible cargar las entregas."
@@ -1981,6 +2089,11 @@ formFiltros.addEventListener(
 botonExportar.addEventListener(
     "click",
     exportarCSV
+);
+
+botonExportarPDF.addEventListener(
+    "click",
+    exportarPDF
 );
 
 /* =========================================================
@@ -3751,6 +3864,7 @@ async function inicializarPanelAdministrador() {
 
     } catch (error) {
         botonExportar.disabled = true;
+        botonExportarPDF.disabled = true;
 
         mostrarTablaVacia(
             "No fue posible preparar el panel."
