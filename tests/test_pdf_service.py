@@ -2,6 +2,10 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 import sys
 import unittest
+from unittest.mock import patch
+
+from reportlab.lib.units import mm
+from reportlab.platypus import LongTable, PageBreak
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
@@ -54,21 +58,8 @@ class PdfServiceTests(unittest.TestCase):
         self.assertTrue(contenido.startswith(b"%PDF"))
         self.assertIn(b"/MediaBox [ 0 0 612 792 ]", contenido)
 
-    def test_genera_multiples_bloques(self):
-        contenido = generar_pdf_entregas(
-            entregas=[self.crear_entrega(i) for i in range(51)],
-            fecha_inicio=None,
-            fecha_fin=None,
-            agencia="Todas",
-            fletero="Todos",
-            usuario_generador="admin",
-        )
-
-        self.assertTrue(contenido.startswith(b"%PDF"))
-        self.assertGreater(len(contenido), 10000)
-
-    def test_genera_cincuenta_y_mas_de_cien_registros(self):
-        for cantidad in (50, 101):
+    def test_genera_pdf_valido_con_distintas_cantidades(self):
+        for cantidad in (1, 50, 51, 101, 199):
             with self.subTest(cantidad=cantidad):
                 contenido = generar_pdf_entregas(
                     entregas=[
@@ -83,13 +74,77 @@ class PdfServiceTests(unittest.TestCase):
                 )
 
                 self.assertTrue(contenido.startswith(b"%PDF"))
-                self.assertGreater(len(contenido), 10000)
+                self.assertGreater(len(contenido), 1000)
+
+    def test_usa_una_tabla_continua_sin_pagebreak_artificial(self):
+        entregas = [self.crear_entrega(i) for i in range(199)]
+        elementos = []
+
+        def capturar_build(documento, story, **kwargs):
+            del documento, kwargs
+            elementos.extend(story)
+
+        with patch(
+            "app.services.pdf_service.BaseDocTemplate.build",
+            autospec=True,
+            side_effect=capturar_build,
+        ):
+            generar_pdf_entregas(
+                entregas=entregas,
+                fecha_inicio=None,
+                fecha_fin=None,
+                agencia="Todas",
+                fletero="Todos",
+                usuario_generador="admin",
+            )
+
+        tablas = [
+            elemento
+            for elemento in elementos
+            if isinstance(elemento, LongTable)
+        ]
+        self.assertEqual(len(tablas), 1)
+        self.assertFalse(
+            any(
+                isinstance(elemento, PageBreak)
+                for elemento in elementos
+            )
+        )
+        self.assertEqual(tablas[0].repeatRows, 1)
+        self.assertEqual(tablas[0].splitByRow, 1)
+        self.assertEqual(len(tablas[0]._cellvalues), 200)
+
+    def test_correlativo_general_en_orden_hasta_199(self):
+        tabla = _crear_tabla([self.crear_entrega(i) for i in range(199)])
+        correlativos = [
+            fila[0].getPlainText()
+            for fila in tabla._cellvalues[1:]
+        ]
+        numeros_envio = [
+            fila[2].getPlainText()
+            for fila in tabla._cellvalues[1:]
+        ]
+
+        self.assertEqual(tabla._cellvalues[0][0].getPlainText(), "No.")
+        self.assertEqual(
+            correlativos,
+            [str(indice) for indice in range(1, 200)],
+        )
+        self.assertEqual(
+            numeros_envio,
+            [str(1000 + indice) for indice in range(199)],
+        )
+
+    def test_un_registro_inicia_correlativo_en_uno(self):
+        tabla = _crear_tabla([self.crear_entrega(1)])
+
+        self.assertEqual(tabla._cellvalues[1][0].getPlainText(), "1")
 
     def test_comentario_se_normaliza_sin_modificar_origen(self):
         original = "  Comentario\ncon   demasiados espacios " * 3
         resultado = normalizar_comentario(original)
 
-        self.assertEqual(len(resultado), 42)
+        self.assertEqual(len(resultado), 34)
         self.assertTrue(resultado.endswith("..."))
         self.assertIn("\n", original)
 
@@ -106,6 +161,19 @@ class PdfServiceTests(unittest.TestCase):
     def test_logo_y_anchos_disponibles(self):
         self.assertTrue(obtener_ruta_logo().is_file())
         self.assertLessEqual(sum(ANCHOS_COLUMNAS), 192 * 2.8347)
+        self.assertEqual(
+            ANCHOS_COLUMNAS,
+            [
+                9 * mm,
+                38 * mm,
+                17 * mm,
+                33 * mm,
+                25 * mm,
+                25 * mm,
+                20 * mm,
+                20 * mm,
+            ],
+        )
 
     def test_coordenada_cero_no_se_pierde(self):
         self.assertEqual(formatear_coordenada(0), "0")
@@ -117,7 +185,7 @@ class PdfServiceTests(unittest.TestCase):
 
     def test_fecha_se_mantiene_en_una_sola_linea(self):
         tabla = _crear_tabla([self.crear_entrega(1)])
-        celda_fecha = tabla._cellvalues[1][0]
+        celda_fecha = tabla._cellvalues[1][1]
 
         self.assertNotIn("<br", celda_fecha.text.lower())
         self.assertIn("02/10/2026 9:30 a. m.", celda_fecha.text)
@@ -135,6 +203,23 @@ class PdfServiceTests(unittest.TestCase):
 
         self.assertFalse(any("Resumen final" in texto for texto in textos))
         self.assertTrue(any("Cantidad de viajes" in texto for texto in textos))
+
+    def test_resumen_de_199_aparece_una_sola_vez(self):
+        resumen = _crear_resumen(
+            total=199,
+            usuario="admin",
+            fecha_impresion=datetime(2026, 10, 2, 9, 30),
+        )
+        textos = [
+            getattr(elemento, "text", "")
+            for elemento in resumen._content
+        ]
+
+        coincidencias = [
+            texto for texto in textos
+            if "Cantidad de viajes:</b> 199" in texto
+        ]
+        self.assertEqual(len(coincidencias), 1)
 
 
 if __name__ == "__main__":
