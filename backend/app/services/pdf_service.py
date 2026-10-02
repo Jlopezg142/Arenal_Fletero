@@ -18,7 +18,6 @@ from reportlab.platypus import (
     Frame,
     KeepTogether,
     LongTable,
-    PageBreak,
     PageTemplate,
     Paragraph,
     Spacer,
@@ -27,21 +26,21 @@ from reportlab.platypus import (
 
 
 ZONA_HORARIA_GUATEMALA = ZoneInfo("America/Guatemala")
-REGISTROS_MAXIMOS_POR_BLOQUE = 50
-LIMITE_COMENTARIO = 42
+LIMITE_COMENTARIO = 34
 
 MARGEN_HORIZONTAL = 10 * mm
 MARGEN_INFERIOR = 14 * mm
 MARGEN_SUPERIOR = 47 * mm
 
 ANCHOS_COLUMNAS = [
+    9 * mm,
     38 * mm,
     17 * mm,
-    40 * mm,
+    33 * mm,
     25 * mm,
     25 * mm,
-    21 * mm,
-    21 * mm,
+    20 * mm,
+    20 * mm,
 ]
 
 
@@ -252,6 +251,7 @@ def _crear_tabla(entregas: list[dict[str, Any]]) -> LongTable:
     )
 
     encabezados = [
+        "No.",
         "Fecha y hora",
         "No. envío",
         "Comentario",
@@ -264,10 +264,11 @@ def _crear_tabla(entregas: list[dict[str, Any]]) -> LongTable:
         [Paragraph(escape(valor), estilo_encabezado) for valor in encabezados]
     ]
 
-    for entrega in entregas:
+    for correlativo, entrega in enumerate(entregas, start=1):
         fecha = formatear_fecha_hora(entrega.get("fecha_envio"))
         datos.append(
             [
+                Paragraph(str(correlativo), estilo_centro),
                 Paragraph(escape(fecha), estilo_centro),
                 Paragraph(
                     escape(str(entrega.get("envio", ""))),
@@ -428,28 +429,14 @@ def generar_pdf_entregas(
         ]
     )
 
-    elementos = []
-    bloques = [
-        entregas[indice: indice + REGISTROS_MAXIMOS_POR_BLOQUE]
-        for indice in range(
-            0,
-            len(entregas),
-            REGISTROS_MAXIMOS_POR_BLOQUE,
-        )
-    ]
-    for indice, bloque in enumerate(bloques):
-        elementos.append(_crear_tabla(bloque))
-
-        if indice < len(bloques) - 1:
-            elementos.append(PageBreak())
-
-    elementos.append(
+    elementos = [
+        _crear_tabla(entregas),
         _crear_resumen(
             total=len(entregas),
             usuario=usuario_generador,
             fecha_impresion=fecha_reporte,
-        )
-    )
+        ),
+    ]
     documento.build(elementos, canvasmaker=CanvasNumerado)
 
     contenido = salida.getvalue()
