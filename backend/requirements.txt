@@ -1,7 +1,7 @@
 fastapi
 uvicorn[standard]
 
-sqlalchemy
+sqlalchemy<2.1
 psycopg2-binary
 python-dotenv
 
@@ -11,3 +11,5 @@ PyJWT
 python-multipart
 
 boto3
+
+reportlab

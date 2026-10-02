@@ -12,7 +12,7 @@
 
     <link
         rel="stylesheet"
-        href="./css/styles.css"
+        href="./css/styles.css?v=3.2.0"
     >
 </head>
 
@@ -539,14 +539,25 @@
                 </table>
             </div>
 
-            <button
-                type="button"
-                id="boton-exportar"
-                class="boton boton-exportar"
-                disabled
-            >
-                Exportar CSV
-            </button>
+            <div class="acciones-exportacion">
+                <button
+                    type="button"
+                    id="boton-exportar"
+                    class="boton boton-exportar"
+                    disabled
+                >
+                    Exportar CSV
+                </button>
+
+                <button
+                    type="button"
+                    id="boton-exportar-pdf"
+                    class="boton boton-exportar boton-exportar-pdf"
+                    disabled
+                >
+                    Exportar PDF
+                </button>
+            </div>
         </section>
     </main>
 
@@ -813,6 +824,6 @@
     <script src="./js/utilidades.js?v=2.6.7"></script>
     <script src="./js/auth.js?v=2.6.7"></script>
     <script src="./js/admin-usuarios.js?v=2.6.7"></script>
-    <script src="./js/app.js?v=2.6.7"></script>
+    <script src="./js/app.js?v=3.2.0"></script>
 </body>
 </html>
